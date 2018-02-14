@@ -217,6 +217,8 @@ public class LoginClase extends AppCompatActivity {
         }else {
             new ConsultarDatos().execute(gen.getCadena()+"webservices/logincelulares.php?usuario="+etUsuario.getText()+"&password="+etPassword.getText());
         }
+        gen.setUsuarioActual(etUsuario.getText().toString());
+        gen.setPasswordActual(etPassword.getText().toString());
         chkGuardasCredenciales=(CheckBox)findViewById(R.id.chkRecordarCredenciales);
         if (chkGuardasCredenciales.isChecked()){
             guardarPreferencias();

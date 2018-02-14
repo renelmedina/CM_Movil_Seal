@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     List<List<String>>  lstDatos=null;
     DataBaseHelper db;
 
+    String usuario="";
+    String password="";
     private ProgressBar pbEstadoSincronizacion;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,11 +84,16 @@ public class MainActivity extends AppCompatActivity {
         Generalidades gen= (Generalidades)this.getApplication();
         gen.setCadena(prefs.getString("rutawebapp","recamedi.com"));
         //Toast.makeText(this, gen.getCadena(), Toast.LENGTH_SHORT).show();
-        Intent intent=getIntent();
-        Bundle extras=intent.getExtras();
-
-        final String usuario=extras.getString("acLoginUser");
-        final String password=extras.getString("acLoginPassword");
+        //Se captura los datos del activity anterior
+//        Intent intent=getIntent();
+//        Bundle extras=intent.getExtras();
+//        Boolean hayExtras=intent.hasExtra("acLoginUser");
+//        if (hayExtras){
+//            usuario=extras.getString("acLoginUser");
+//            password=extras.getString("acLoginPassword");
+//        }
+        usuario=gen.getUsuarioActual();
+        password=gen.getPasswordActual();
         ivSincronizarDatos=(ImageView)findViewById(R.id.ivSincronizarDatos);
         ivSincronizarDatos.setOnClickListener(new View.OnClickListener() {
             @Override

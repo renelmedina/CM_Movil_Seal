@@ -32,6 +32,12 @@ public class Generalidades extends Application {
 
     private int TiempoConexion;
     private int TiempoLectura;
+
+    private String UsuarioActual;
+
+
+
+    private String PasswordActual;
     //private String cadena="holas";
     public Generalidades(){
 
@@ -56,5 +62,20 @@ public class Generalidades extends Application {
 
     public void setTiempoLectura(int tiempoLectura) {
         TiempoLectura = tiempoLectura;
+    }
+    public String getUsuarioActual() {
+        return UsuarioActual;
+    }
+
+    public void setUsuarioActual(String usuarioActual) {
+        UsuarioActual = usuarioActual;
+    }
+
+    public String getPasswordActual() {
+        return PasswordActual;
+    }
+
+    public void setPasswordActual(String passwordActual) {
+        PasswordActual = passwordActual;
     }
 }
