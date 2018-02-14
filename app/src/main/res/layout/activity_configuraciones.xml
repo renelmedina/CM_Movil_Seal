@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.recamedi.comunicaciondispersa.Configuraciones">
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="false">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2"
+                android:text="Configuraciones Generales"
+                android:textAlignment="center" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/txRutaAplicacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ruta AppWeb:" />
+
+            <EditText
+                android:id="@+id/etRutaAppWeb"
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoText="false"
+                android:ems="10"
+                android:hint="http://recamedi.com/"
+                android:inputType="textPersonName"
+                android:singleLine="false"
+                android:textSize="12sp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvC_ConnectTimeout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="T. Conexion (ms):" />
+
+            <EditText
+                android:id="@+id/etC_TiempoConexion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="5000"
+                android:inputType="number" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="T. Lectura (ms):" />
+
+            <EditText
+                android:id="@+id/etC_TiempoLectura"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="5000"
+                android:inputType="number" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btnGuardarConfiguraciones"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2"
+                android:text="Guardar" />
+
+        </TableRow>
+    </TableLayout>
+</RelativeLayout>

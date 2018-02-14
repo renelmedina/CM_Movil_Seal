@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.recamedi.comunicaciondispersa.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <ProgressBar
+                android:id="@+id/pbEstadoSincronizacion"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvEjemplo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="TextView" />
+        </LinearLayout>
+    </ScrollView>
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                app:srcCompat="@drawable/docrepartir" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/ivSincronizarDatos"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    app:srcCompat="@drawable/docsincronizar" />
+            </TableRow>
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                app:srcCompat="@drawable/docenviardatos" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/imageView5"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    app:srcCompat="@drawable/docreenviar" />
+            </TableRow>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+        </TableRow>
+
+    </TableLayout>
+
+</RelativeLayout>

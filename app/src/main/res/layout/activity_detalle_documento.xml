@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.recamedi.comunicaciondispersa.DetalleDocumento">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblCodDoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cod. Doc." />
+
+            <TextView
+                android:id="@+id/tvCodDoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblNroSuministro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nro Suministro:" />
+
+            <TextView
+                android:id="@+id/tvNroSuministro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblTipoDoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipo Doc:" />
+
+            <TextView
+                android:id="@+id/tvTipoDoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblCodBarra"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cod Barra:" />
+
+            <TextView
+                android:id="@+id/tvCodBarra"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblEstado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Estado:" />
+
+            <Spinner
+                android:id="@+id/spEstado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblParentesco"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parentesco:" />
+
+            <Spinner
+                android:id="@+id/spParentesco"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/tvlblDni"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DNI:" />
+
+            <EditText
+                android:id="@+id/etDNI"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/textView13"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lectura Medidor:" />
+
+            <EditText
+                android:id="@+id/etLecturaMedidor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <Button
+                android:id="@+id/btnGPS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GPS" />
+
+            <Button
+                android:id="@+id/btnGrabar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grabar" />
+
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

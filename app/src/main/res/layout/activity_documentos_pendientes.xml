@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    tools:context="com.recamedi.comunicaciondispersa.DocumentosPendientes">
+    
+
+    <!--<ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <EditText
+                    android:id="@+id/etTextoBuscar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="Name" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <EditText
+                    android:id="@+id/etCurrency"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="Name" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <EditText
+                    android:id="@+id/etTemperatura"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="Name" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <EditText
+                    android:id="@+id/etHumedad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="Name" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <Button
+                    android:id="@+id/btnBuscar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Button" />
+
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </TableRow>
+        </TableLayout>
+
+
+    </ScrollView>-->
+    <ListView
+        android:id="@+id/lstDatos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:dividerHeight="5dp"
+        android:footerDividersEnabled="false"
+        android:headerDividersEnabled="false"
+        android:scrollbars="vertical" />
+</RelativeLayout>
