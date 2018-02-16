@@ -106,6 +106,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        GeoLocation geoLocation=new GeoLocation(this);
+        geoLocation.IniciarServicio();
+        geoLocation.muestraPosicionActual();
+        Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+
+
     }
 
     private void SincronizarDatos(String usuario,String password) {

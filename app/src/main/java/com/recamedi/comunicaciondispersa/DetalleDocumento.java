@@ -146,13 +146,20 @@ public class DetalleDocumento extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //RegistrarDocumentoTrabajo(objDetalle);
-                miUbicacion();
+                //miUbicacion();
+                Intent intent = new Intent(getApplicationContext(),GPSMovil.class);
+                startService(intent);
+                ///startService(new Intent(this, GPSMovil.class));
+
             }
         });
 
 
     }
-
+    public void StartService(View view){
+        Intent intent = new Intent(this,GPSMovil.class);
+        startService(intent);
+    }
     /*Ubicacion de GPS*/
     private boolean isLocationEnabled() {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
