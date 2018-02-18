@@ -146,9 +146,9 @@ public class DetalleDocumento extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //RegistrarDocumentoTrabajo(objDetalle);
-                //miUbicacion();
-                Intent intent = new Intent(getApplicationContext(),GPSMovil.class);
-                startService(intent);
+                miUbicacion();
+                /*Intent intent = new Intent(getApplicationContext(),GPSMovil.class);
+                startService(intent);*/
                 ///startService(new Intent(this, GPSMovil.class));
 
             }

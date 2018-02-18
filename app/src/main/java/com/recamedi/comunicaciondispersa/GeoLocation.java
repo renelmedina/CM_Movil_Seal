@@ -12,6 +12,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.Locale;
  * Created by Renel01 on 16/02/2018.
  */
 
-public class GeoLocation extends IntentService  implements LocationListener {
+public class GeoLocation implements LocationListener {
     private Boolean activado;
     private Double Longitud;
     private Double Latitud;
@@ -120,6 +121,8 @@ public class GeoLocation extends IntentService  implements LocationListener {
             Longitud=location.getLongitude();
         }
         obtenerDireccion(location);
+        Toast.makeText(act.getApplicationContext(), "Latitud: "+Latitud+" Longitud: "+Longitud, Toast.LENGTH_SHORT).show();
+
     }
     public void obtenerDireccion(Location loc){
         if (loc!=null){

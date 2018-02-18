@@ -1,12 +1,19 @@
 package com.recamedi.comunicaciondispersa;
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -51,6 +59,36 @@ public class MainActivity extends AppCompatActivity {
     String usuario="";
     String password="";
     private ProgressBar pbEstadoSincronizacion;
+
+    private BroadcastReceiver broadcastReceiver;
+
+    Button btnActivarGPS;
+
+    TextView tvEjemplo;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (broadcastReceiver==null){
+            broadcastReceiver=new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Toast.makeText(getApplicationContext(),"Coordenadas: " +intent.getExtras().get("coordinates"),Toast.LENGTH_SHORT).show();
+                    tvEjemplo.append("\n"+intent.getExtras().get("coordinates"));
+                }
+            };
+        }
+        registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (broadcastReceiver!=null){
+            unregisterReceiver(broadcastReceiver);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,13 +99,14 @@ public class MainActivity extends AppCompatActivity {
         pbEstadoSincronizacion = (ProgressBar) findViewById(R.id.pbEstadoSincronizacion);
         pbEstadoSincronizacion.setMax(5000);
         pbEstadoSincronizacion.setVisibility(View.INVISIBLE);
-        TextView tvEjemplo=(TextView)findViewById(R.id.tvEjemplo);
-        tvEjemplo.setVisibility(View.INVISIBLE);
+        tvEjemplo=(TextView)findViewById(R.id.tvEjemplo);
+        //tvEjemplo.setVisibility(View.INVISIBLE);
 
         //Base de Datos
         db= new DataBaseHelper(this);
         gen= (Generalidades)this.getApplication();
 
+        btnActivarGPS=(Button)findViewById(R.id.btnActivarGPS);
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,15 +145,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        GeoLocation geoLocation=new GeoLocation(this);
+        /*GeoLocation geoLocation=new GeoLocation(this);
         geoLocation.IniciarServicio();
         geoLocation.muestraPosicionActual();
-        Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, Servicios.class);
+        startService(intent);*/
+
+        if (!runtine_permissions()){
+            enable_bottuns();
+
+        }
 
 
     }
+    private void enable_bottuns(){
+        btnActivarGPS.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "iniciando Servicio", Toast.LENGTH_SHORT).show();
 
-    private void SincronizarDatos(String usuario,String password) {
+                Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+                startService(i);
+            }
+        });
+    }
+
+    private Boolean runtine_permissions(){
+        if (Build.VERSION.SDK_INT>=23&& ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode==100){
+            if (grantResults[0]==PackageManager.PERMISSION_GRANTED&&grantResults[1]==PackageManager.PERMISSION_GRANTED){
+                //Activar Boton
+            }else{
+                runtine_permissions();
+            }
+        }
+    }
+
+    private void SincronizarDatos(String usuario, String password) {
         Generalidades gen= (Generalidades)this.getApplication();
 
         Toast.makeText(getApplicationContext(),usuario +""+password,Toast.LENGTH_SHORT).show();
@@ -126,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
         //Antes de iniciar el proceso en segundo plano
         @Override
         protected void onPreExecute(){
-            TextView tvEjemplo=(TextView)findViewById(R.id.tvEjemplo);
+            tvEjemplo=(TextView)findViewById(R.id.tvEjemplo);
             tvEjemplo.setVisibility(View.VISIBLE);
             pbEstadoSincronizacion.setVisibility(View.VISIBLE);
             pbEstadoSincronizacion.setProgress(0);
