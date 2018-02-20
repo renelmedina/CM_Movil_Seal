@@ -145,18 +145,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        /*GeoLocation geoLocation=new GeoLocation(this);
+        GeoLocation geoLocation=new GeoLocation(this);
         geoLocation.IniciarServicio();
         geoLocation.muestraPosicionActual();
-        //Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
 
-        Intent intent = new Intent(this, Servicios.class);
+        /*Intent intent = new Intent(this, Servicios.class);
         startService(intent);*/
 
-        if (!runtine_permissions()){
+        /*if (!runtine_permissions()){
             enable_bottuns();
 
-        }
+        }*/
 
 
     }
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
     private void SincronizarDatos(String usuario, String password) {
         Generalidades gen= (Generalidades)this.getApplication();
 
-        Toast.makeText(getApplicationContext(),usuario +""+password,Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),usuario +""+password,Toast.LENGTH_SHORT).show();
         new ListarDocumentos().execute(gen.getCadena()+"webservices/sincronizardatos.php?usuario="+usuario+"&password="+password);
 
 

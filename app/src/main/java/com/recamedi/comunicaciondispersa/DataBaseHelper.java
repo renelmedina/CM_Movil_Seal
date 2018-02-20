@@ -16,7 +16,7 @@ import java.util.List;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     //Base de datos
-    private static final int DATABASE_VER=7;
+    private static final int DATABASE_VER=8;
     private static final String DATABASE_NAME="COMDIS";//comunicacion dispersa
 
     //Tabla DE lecturas
@@ -42,6 +42,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String KEY_FechaVisita="fechavisita";
     private static final String KEY_VisitaLatitud="visita_latitud";
     private static final String KEY_VisitaLongitud="visita_longitud";
+    private static final String KEY_EstadoEnvio="estadoenvioserv";//Si ya se envio(1) al servidor o aun no(0). para trabajar en modo offline
 
     //Tabla de logins
     private static final String TABLE_NAME_LOGIN="Logins";
@@ -61,26 +62,27 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
         String CREATE_TABLE="CREATE TABLE IF NOT EXISTS "+TABLE_NAME+" ("
-                +KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"
-                +KEY_Codigos_codigodoc+" TEXT,"
-                +KEY_Codigos_nrosuministro+" TEXT,"
-                +KEY_tipodoc_codigo+" TEXT,"
-                +KEY_tipodoc_nombretipodoc+" TEXT,"
-                +KEY_nrodocumentoseal+" TEXT,"
-                +KEY_codigobarra+" TEXT,"
-                +KEY_coordenadas_lat+" TEXT,"
-                +KEY_coordenadas_long+" TEXT,"
-                +KEY_fechaasig+" TEXT,"
-                +KEY_cliente_dni+" TEXT,"
-                +KEY_cliente_nombrecliente+" TEXT,"
-                +KEY_EstadoEntrega+" TEXT,"
-                +KEY_EstadoFirma+" TEXT,"
-                +KEY_Parentesco+" TEXT,"
-                +KEY_DniRecepcion+" TEXT,"
-                +KEY_LecturaMedidor+" TEXT,"
-                +KEY_FechaVisita+" TEXT,"
-                +KEY_VisitaLatitud+" TEXT,"
-                +KEY_VisitaLongitud+" TEXT"
+                +KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"//0
+                +KEY_Codigos_codigodoc+" TEXT,"//1
+                +KEY_Codigos_nrosuministro+" TEXT,"//2
+                +KEY_tipodoc_codigo+" TEXT,"//3
+                +KEY_tipodoc_nombretipodoc+" TEXT,"//4
+                +KEY_nrodocumentoseal+" TEXT,"//5
+                +KEY_codigobarra+" TEXT,"//6
+                +KEY_coordenadas_lat+" TEXT,"//7
+                +KEY_coordenadas_long+" TEXT,"//8
+                +KEY_fechaasig+" TEXT,"//9
+                +KEY_cliente_dni+" TEXT,"//10
+                +KEY_cliente_nombrecliente+" TEXT,"//11
+                +KEY_EstadoEntrega+" TEXT,"//12
+                +KEY_EstadoFirma+" TEXT,"//13
+                +KEY_Parentesco+" TEXT,"//14
+                +KEY_DniRecepcion+" TEXT,"//15
+                +KEY_LecturaMedidor+" TEXT,"//16
+                +KEY_FechaVisita+" TEXT,"//17
+                +KEY_VisitaLatitud+" TEXT,"//18
+                +KEY_VisitaLongitud+" TEXT,"//19
+                +KEY_EstadoEnvio+" TEXT"//20
                 +");";
         sqLiteDatabase.execSQL(CREATE_TABLE);
         //Creando la tabla de login
@@ -163,7 +165,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_NAME,null,values);
         db.close();
     }
-    public void updateDocumento(int codDocumento,String EstadoEntrega, String EstadoFirma, String Parentesco,String DniRecepcion, String LecturaMedidor,String FechaVisita){
+    public void updateDocumento(int codDocumento,String EstadoEntrega, String EstadoFirma, String Parentesco,String DniRecepcion, String LecturaMedidor,String FechaVisita, String LatitudVisita, String LongitudVisita){
         SQLiteDatabase db=this.getWritableDatabase();
         ContentValues values=new ContentValues();
         values.put(KEY_EstadoEntrega,EstadoEntrega);
@@ -172,6 +174,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         values.put(KEY_DniRecepcion,DniRecepcion);
         values.put(KEY_LecturaMedidor,LecturaMedidor);
         values.put(KEY_FechaVisita,FechaVisita);
+        values.put(KEY_VisitaLatitud,LatitudVisita);
+        values.put(KEY_VisitaLongitud,LongitudVisita);
 
         /*return db.update(TABLE_NAME,
                 values,KEY_Codigos_codigodoc+" =?",new String[]{codDocumento});*/
@@ -180,6 +184,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_NAME,values,KEY_Codigos_codigodoc+" ="+codDocumento,null);
         //db.update("sdfsd","sdfsdfsd","asdfasdfasd");
 
+    }
+    //para actualizar el estado de envio al servidor
+    public void updateDocumento(int codDocumento, String estadoEnvio){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put(KEY_EstadoEnvio,estadoEnvio);
+        db.update(TABLE_NAME,values,KEY_Codigos_codigodoc+" ="+codDocumento,null);
     }
     public int updateDocumento(DatosListview datosListview){
         SQLiteDatabase db=this.getWritableDatabase();
@@ -290,7 +301,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
                 textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
                 textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
-
+                textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
 
                 /*+0+" INTEGER PRIMARY KEY,"
                         +1+" TEXT,"
@@ -309,18 +320,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                         +14+" TEXT,"
                         +15+" TEXT,"
                         +KEY_FechaVisita+" TEXT"*/
-                textodetalle+="Estado Entrega: "+cursor.getString(11)+"\n";
+                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
                 textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
                 textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
-                textodetalle+="DNI Recepcion: "+cursor.getString(14)+"\n";
-                textodetalle+="Lectura Medidor: "+cursor.getString(15)+"\n";
-                textodetalle+="FechaVisitada: "+cursor.getString(16)+"\n";
+                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
 //                if (cursor.getString(12)==null){
 //                    textodetalle+="Estado: Sin visita";
 //                }else{
 //                    textodetalle+="Estado: "+cursor.getString(12);
 //                }
-                textodetalle+="Estado: "+cursor.getString(12);
+                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                textodetalle+="Estado Envio: "+cursor.getString(20);
+
                 datosListview.setDetalle(textodetalle);
                 datosListview.setImagen(R.drawable.arequipaaccsac);
 

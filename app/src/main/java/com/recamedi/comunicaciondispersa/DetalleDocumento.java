@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -29,11 +30,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -43,7 +46,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -81,11 +87,18 @@ public class DetalleDocumento extends AppCompatActivity {
     Double Latitud = 0.0;
     Double Longitud = 0.0;
 
+    Generalidades gen;
+    String usuario="";
+    String password="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detalle_documento);
 
+        //Credenciales usuario actual
+        gen=(Generalidades)getApplication();
+        usuario=gen.getUsuarioActual();
+        password=gen.getPasswordActual();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (!isLocationEnabled())
             showAlert();
@@ -137,24 +150,25 @@ public class DetalleDocumento extends AppCompatActivity {
         tvCodDoc.setText(objDetalle.getTitulo());
         tvNroSuministro.setText(objDetalle.getNroSuministro());
         tvTipoDoc.setText(objDetalle.getNombreTipoDoc());
-        tvCodBarra.setText(objDetalle.getCodigoBarra());
+        tvCodBarra.setText(objDetalle.getCodigoBarra()+" "+objDetalle.getClienteNombre());
 
         btnRezagado = (Button) findViewById(R.id.btn_ddRezagado);
-
+        btnRezagado.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                miUbicacion();
+                RegistrarDocumentoTrabajo(objDetalle,"3");
+            }
+        });
         btnEntrgado = (Button) findViewById(R.id.btn_ddEntregado);
         btnEntrgado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //RegistrarDocumentoTrabajo(objDetalle);
                 miUbicacion();
-                /*Intent intent = new Intent(getApplicationContext(),GPSMovil.class);
-                startService(intent);*/
-                ///startService(new Intent(this, GPSMovil.class));
+                RegistrarDocumentoTrabajo(objDetalle,"4");
 
             }
         });
-
-
     }
     public void StartService(View view){
         Intent intent = new Intent(this,GPSMovil.class);
@@ -176,7 +190,7 @@ public class DetalleDocumento extends AppCompatActivity {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle("Active su ubicacion")
                 .setMessage("Su ubicación esta desactivada.\npor favor active su ubicación " +
-                        "usa esta app")
+                        "para usar esta app")
                 .setPositiveButton("Configuración de ubicación", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface paramDialogInterface, int paramInt) {
@@ -218,12 +232,6 @@ public class DetalleDocumento extends AppCompatActivity {
     private void miUbicacion() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         if (!checkLocation()){
@@ -238,7 +246,7 @@ public class DetalleDocumento extends AppCompatActivity {
         Toast.makeText(getApplicationContext(),"Longitud: "+Longitud+" Latitud: "+Latitud,Toast.LENGTH_SHORT).show();
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,15000,0,locListener);
     }
-    private void RegistrarDocumentoTrabajo(DatosListview objDetalle) {
+    private void RegistrarDocumentoTrabajo(DatosListview objDetalle, String EstadoEntrega) {
         int indiceEstado=spEstado.getSelectedItemPosition();
         String ValorEstado="";
         switch (indiceEstado){
@@ -313,20 +321,32 @@ public class DetalleDocumento extends AppCompatActivity {
                 ValorParentesco="99";//99. No informado
                 break;
         }
-        DatosListview objDetalles=(DatosListview)getIntent().getExtras().getSerializable("objeto");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
         Date date = new Date();
 
         String fecha = dateFormat.format(date);
+        String DniRecepion="0";
+        String LecturaMedidor="0";
+        if (!etDni.getText().equals("")){
+            DniRecepion=etDni.getText().toString();
+        }
+        if (!etLecturaMedidor.getText().equals("")){
+            LecturaMedidor=etLecturaMedidor.getText().toString();
+        }
         db.updateDocumento(
                 objDetalle.getId(),
-                "1",//1 significara que ya se hizo la visita
+                ""+EstadoEntrega,//3=Doc. Rezagado,4=Doc. E. Cliente, segun la BD en Mysql
                 ""+ValorEstado,//Las comillas simples no tienen ningun valor, solo es para conservar el tip de ayuda de android studio
                 ""+ValorParentesco,
-                ""+etDni.getText(),
-                ""+etLecturaMedidor.getText(),
-                ""+fecha
+                ""+DniRecepion,
+                ""+LecturaMedidor,
+                ""+fecha,
+                ""+Latitud,
+                ""+Longitud
         );
+        Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
+        startActivity(acDocumentosPendientes);
+        finish();//Cierra este Intent(formulario)
         Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
                 /*Intent acDocumentosLista=new Intent(getApplicationContext(),DocumentosPendientes.class);
                 startActivity(acDocumentosLista);
@@ -342,7 +362,7 @@ public class DetalleDocumento extends AppCompatActivity {
                 );
                 db.updateDocumento(datosListview);*/
 
-        Generalidades general=(Generalidades)getApplication();
+        /*Generalidades general=(Generalidades)getApplication();
         String url=general.getCadena()+"webservices/capturardatoscel.php";
         obj=new HandleXml(url);
         obj.fetchXML(1);
@@ -354,25 +374,151 @@ public class DetalleDocumento extends AppCompatActivity {
             Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
             startActivity(acDocumentosPendientes);
             finish();//Cierra este Intent(formulario)
-        }
+        }*/
+
+
+        //Se envia datos al servidor
+        SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
+        Date fechaEjecutado = new Date();
+        String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
+        //Generalidades gen=(Generalidades)getApplication();
+        new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
+                +"usuario="+usuario+"&password="+password+"&"
+                +"DocumentosTrabajoID="+objDetalle.getId()+"&"
+                +"FechaAsignado="+objDetalle.getFechaAsigando()+"&"
+                +"FechaEjecutado="+sFechaEjecutado+"&"
+                +"Estado="+EstadoEntrega+"&"
+                +"EstadoSeal="+ValorEstado+"&"
+                +"NombreRecepcionador=&"
+                +"DNIRecepcionador="+etDni.getText()+"&"
+                +"Parentesco="+ValorParentesco+"&"
+                +"LecturaMedidor="+LecturaMedidor+"&"
+                +"LatitudVisita="+Latitud+"&"
+                +"LongitudVisita="+Longitud+"&"
+                +"Observaciones="
+
+        );
     }
 
     private class RegistrarDatosServidor extends AsyncTask<String,Integer,String>{
         @Override
         protected void onPreExecute(){
             //Se desactivan el boton hasta que culmine el proceso
-            btnEntrgado.setEnabled(false);
-            btnRezagado.setEnabled(false);
+            //btnEntrgado.setEnabled(false);
+            //btnRezagado.setEnabled(false);
         }
         @Override
-        protected String doInBackground(String... strings) {
-            return null;
+        protected String doInBackground(String... urls) {
+            try {
+                publishProgress(0);
+                String TextoRecuperadoDeServidor=downloadUrl(urls[0]);
+                //String Estadorespuesta=LeerXml(""+TextoRecuperadoDeServidor);
+                //Toast.makeText(getApplicationContext(),"url: "+urls[0],Toast.LENGTH_SHORT).show();
+
+                XmlPullParserFactory factory;
+                String respuestaparaaccion=null;
+                try{
+                    //StringBuilder fis=new StringBuilder();
+                    factory=XmlPullParserFactory.newInstance();
+                    factory.setNamespaceAware(true);
+                    XmlPullParser xpp=factory.newPullParser();
+                    //Toast.makeText(getApplicationContext(),"-"+xmlTexto,Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),":)"+XMLtextoParsear,Toast.LENGTH_SHORT).show();
+                    xpp.setInput(new StringReader(TextoRecuperadoDeServidor));
+                    String texto = null;
+                    int eventType=xpp.getEventType();
+                    int indice=0;
+                    DataBaseHelper db;
+                    db= new DataBaseHelper(getApplicationContext());
+                    while (eventType!= XmlPullParser.END_DOCUMENT){
+                        String name=xpp.getName();
+                        publishProgress(indice);
+                        switch (eventType){
+                            case XmlPullParser.START_TAG:
+                                break;
+                            case XmlPullParser.TEXT:
+                                texto=xpp.getText();
+                                break;
+                            case XmlPullParser.END_TAG:
+                                if (name.equals("cantidad")){//Nombre del tag del archivo xml
+                                    respuestaparaaccion=texto;
+                                }else{
+                                    //aun nada
+                                }
+                                break;
+                        }
+                        eventType=xpp.next();
+                    }
+                    return respuestaparaaccion;
+                    //tvEstadoSession.setText(NombreCompleto);
+                } catch (XmlPullParserException e) {
+                    e.printStackTrace();
+                    respuestaparaaccion="-1";
+                    return respuestaparaaccion;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    respuestaparaaccion="-2";
+                    return respuestaparaaccion;
+                }
+
+                //return Estadorespuesta;
+                //return downloadUrl(urls[0]);
+            } catch (IOException e) {
+                //tvEstadoSession.setText("Parameros Incorrectos !!!");
+                //Toast.makeText(getApplicationContext(),"Error de Conexion:"+e,Toast.LENGTH_SHORT).show();
+
+                return "-3";
+            }
+
         }
         @Override
         protected void onPostExecute(String result){
             //se activa los botones una vez culminado el proceso
-            btnEntrgado.setEnabled(false);
-            btnRezagado.setEnabled(false);
+            //btnEntrgado.setEnabled(false);
+            //btnRezagado.setEnabled(false);
+            TextView tvEjemplo=(TextView)findViewById(R.id.tvEjemplo);
+            //tvEjemplo.setText(""+result.toString());
+            //tvEstadoSession.setText("Usuario Aceptado");
+            DataBaseHelper db;
+            db= new DataBaseHelper(getApplicationContext());
+            //String Estadorespuesta=LeerXml(""+xmlTexto);
+            String Estadorespuesta=result;
+            DatosListview objDetallito = (DatosListview) getIntent().getExtras().getSerializable("objeto");
+            if (Integer.parseInt(Estadorespuesta)>0){
+                Snackbar.make(btnEntrgado, "Guardado Correctamente("+Estadorespuesta+")", Snackbar.LENGTH_SHORT).show();
+                db.updateDocumento(
+                        objDetallito.getId(),
+                        "1"//1= Enviado
+                );
+            }else if (Estadorespuesta.equals("-2")){//Que el usuario y contraseña son incorrectos y no se inserto
+                //Toast.makeText(getApplicationContext(),"Agregados: "+i+" , Duplicados eliminados: "+FilasEliminadas,Toast.LENGTH_SHORT).show();
+                db.updateDocumento(
+                        objDetallito.getId(),
+                        "0"//0= No enviado
+                );
+                Snackbar.make(btnEntrgado, "Usuario y contraeña incorrectos("+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
+            }else if (Estadorespuesta.equals("-3")){
+                db.updateDocumento(
+                        objDetallito.getId(),
+                        "0"//0= No enviado
+                );
+                Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
+            }else if(Estadorespuesta.equals("-2")){
+                db.updateDocumento(
+                        objDetallito.getId(),
+                        "0"//0= No enviado
+                );
+                Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
+            }else if(Estadorespuesta.equals("-1")){
+                db.updateDocumento(
+                        objDetallito.getId(),
+                        "0"//0= No enviado
+                );
+                Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
+            }else {
+
+            }
+
         }
         @Override
         protected void onProgressUpdate(Integer... valor){
@@ -380,5 +526,51 @@ public class DetalleDocumento extends AppCompatActivity {
             tvEjemplo.setText("Sincronizando "+valor[0]+" Registros...");
             pbEstadoSincronizacion.setProgress(valor[0]);*/
         }
+    }
+    private String downloadUrl(String myurl) throws IOException {
+        Log.i("URL",""+myurl);
+        myurl = myurl.replace(" ","%20");
+        InputStream is = null;
+        // Only display the first 500 characters of the retrieved
+        // web page content.
+        try {
+            URL url = new URL(myurl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(gen.getTiempoLectura());
+            conn.setConnectTimeout(gen.getTiempoConexion());
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            // Starts the query
+            conn.connect();
+            int response = conn.getResponseCode();
+            Log.d("respuesta", "The response is: " + response);
+            is = conn.getInputStream();
+            //conn.getInputStream().read();
+
+
+            // Convert the InputStream into a string
+            String contentAsString = readIt(is);
+            return contentAsString;
+            // Makes sure that the InputStream is closed after the app is
+            // finished using it.
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+
+        }
+    }
+    public String readIt(InputStream stream) throws IOException, UnsupportedEncodingException {
+        /*Aqui se leera el XML*/
+        //xmlTexto =new String(buffer);
+        DataInputStream dis = new DataInputStream(stream);
+        String inputLine;
+        String xmlDelServidor="";
+        while ((inputLine = dis.readLine()) != null) {
+            //Log.d("XML",inputLine);
+            xmlDelServidor +=inputLine;
+        }
+        return new String(xmlDelServidor);
     }
 }
