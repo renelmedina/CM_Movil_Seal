@@ -1,17 +1,29 @@
 package com.recamedi.comunicaciondispersa;
 
 import android.Manifest;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -25,6 +37,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +52,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -53,6 +67,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -79,6 +94,8 @@ public class DetalleDocumento extends AppCompatActivity {
 
     Button btnEntrgado;
     Button btnRezagado;
+    ImageView ivFoto;
+
 
     DataBaseHelper db;
 
@@ -90,6 +107,11 @@ public class DetalleDocumento extends AppCompatActivity {
     Generalidades gen;
     String usuario="";
     String password="";
+
+    //Parametros de a foto
+    private Uri output;
+    private String foto;
+    private File file;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -169,6 +191,7 @@ public class DetalleDocumento extends AppCompatActivity {
 
             }
         });
+        ivFoto=(ImageView)findViewById(R.id.ivFoto);
     }
     public void StartService(View view){
         Intent intent = new Intent(this,GPSMovil.class);
@@ -344,9 +367,9 @@ public class DetalleDocumento extends AppCompatActivity {
                 ""+Latitud,
                 ""+Longitud
         );
-        Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
+        /*Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
         startActivity(acDocumentosPendientes);
-        finish();//Cierra este Intent(formulario)
+        finish();//Cierra este Intent(formulario)*/
         Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
                 /*Intent acDocumentosLista=new Intent(getApplicationContext(),DocumentosPendientes.class);
                 startActivity(acDocumentosLista);
@@ -376,6 +399,8 @@ public class DetalleDocumento extends AppCompatActivity {
             finish();//Cierra este Intent(formulario)
         }*/
 
+        //Se toma foto
+        getCamara("nombreFoto");
 
         //Se envia datos al servidor
         SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
@@ -573,4 +598,221 @@ public class DetalleDocumento extends AppCompatActivity {
         }
         return new String(xmlDelServidor);
     }
+
+    //parametros paara tomar foto
+    private void getCamara(String NombreFoto){
+        foto = Environment.getExternalStorageDirectory() +"/"
+                +NombreFoto+".jpg";
+        file=new File(foto);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        output = Uri.fromFile(file);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, output);
+        startActivityForResult(intent, 1);
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+
+            try {
+                loadImageFromFile(data);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+//        ContentResolver cr=this.getContentResolver();
+//        Bitmap bit = null;
+//        //imagen.setBackgroundResource(0);
+//        try {
+//            bit = android.provider.MediaStore.Images.Media.getBitmap(cr, output);
+//
+//            //orientation
+//            int rotate = 0;
+//            try {
+//                ExifInterface exif = new ExifInterface(
+//                        file.getAbsolutePath());
+//                int orientation = exif.getAttributeInt(
+//                        ExifInterface.TAG_ORIENTATION,
+//                        ExifInterface.ORIENTATION_NORMAL);
+//
+//                switch (orientation) {
+//                    case ExifInterface.ORIENTATION_ROTATE_270:
+//                        rotate = 270;
+//                        break;
+//                    case ExifInterface.ORIENTATION_ROTATE_180:
+//                        rotate = 180;
+//                        break;
+//                    case ExifInterface.ORIENTATION_ROTATE_90:
+//                        rotate = 90;
+//                        break;
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            Matrix matrix = new Matrix();
+//            matrix.postRotate(rotate);
+//            bit = Bitmap.createBitmap(bit , 0, 0, bit.getWidth(), bit.getHeight(), matrix, true);
+//
+//            ivFoto.setImageBitmap(bit);
+//            bit=BitmapFactory.decodeResource(getResources(),R.id.ivFoto);
+
+
+            //Estampando fecha y hora a la foto
+
+            /*BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap bitmap = BitmapFactory.decodeFile(getOutputMediaFile().getAbsolutePath());
+
+            //        Bitmap src = BitmapFactory.decodeResource(); // the original file is cuty.jpg i added in resources
+            Bitmap dest = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);*/
+
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//            String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
+//            Bitmap newBitmap=bit.copy(bit.getConfig(),true);
+//            Canvas cs = new Canvas(newBitmap);
+//            Paint tPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//            tPaint.setTextSize(35);
+//            tPaint.setColor(Color.BLUE);
+//            tPaint.setStyle(Paint.Style.FILL);
+//            cs.drawBitmap(bit, 0f, 0f, null);
+//            float height = tPaint.measureText("yY");
+//            cs.drawText(dateTime, 20f, height+15f, null);
+//            try {
+//                bit.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File("/sdcard/timeStampedImage.jpg")));
+//                Toast.makeText(getApplicationContext(),"Foto con fecha",Toast.LENGTH_LONG).show();
+//
+//            } catch (FileNotFoundException e) {
+//                // TODO Auto-generated catch block
+//                Toast.makeText(getApplicationContext(),"Foto SIN fecha",Toast.LENGTH_LONG).show();
+//
+//                e.printStackTrace();
+//            }
+
+//
+//        } catch (FileNotFoundException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+        //new SubirFotoServido();
+        //imagen.setImageBitmap(bit);
+    }
+
+    public void loadImageFromFile(Intent data) throws FileNotFoundException {
+
+        ImageView view = (ImageView)this.findViewById(R.id.ivFoto);
+        view.setVisibility(View.VISIBLE);
+
+
+        int targetW = view.getWidth();
+        int targetH = view.getHeight();
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(foto, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(output));
+        view.setImageBitmap(bitmap);
+
+        Bitmap.Config config = bitmap.getConfig();
+        if(config == null){
+            config = Bitmap.Config.ARGB_8888;
+        }
+
+
+        Bitmap newBitmap = null;
+        newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), config);
+        Canvas newCanvas = new Canvas(newBitmap);
+
+        newCanvas.drawBitmap(bitmap, 0, 0, null);
+
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
+        String captionString = dateTime;
+        Paint paintText = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintText.setColor(Color.BLUE);
+        paintText.setTextSize(50);
+        paintText.setStyle(Paint.Style.FILL);
+        paintText.setShadowLayer(10f, 10f, 10f, Color.BLACK);
+
+        Rect rectText = new Rect();
+        paintText.getTextBounds(captionString, 0, captionString.length(), rectText);
+
+        newCanvas.drawText(captionString,
+                0, rectText.height(), paintText);
+
+//        Toast.makeText(getApplicationContext(),
+//                "drawText: " + captionString,
+//                Toast.LENGTH_LONG).show();
+
+        view.setImageBitmap(newBitmap);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(foto);
+            newBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+            // PNG is a lossless format, the compression factor (100) is ignored
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        /*SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
+
+        //Bitmap newBitmap=bit.copy(bit.getConfig(),true);
+        Canvas cs = new Canvas(bitmap);
+        Paint tPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tPaint.setTextSize(35);
+        tPaint.setColor(Color.BLUE);
+        tPaint.setStyle(Paint.Style.FILL);
+        cs.drawBitmap(bitmap, 0f, 0f, null);
+        float height = tPaint.measureText("yY");
+        cs.drawText(dateTime, 20f, height+15f, null);
+        try {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File("/sdcard/timeStampedImage.jpg")));
+            Toast.makeText(getApplicationContext(),"Foto con fecha",Toast.LENGTH_LONG).show();
+
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            Toast.makeText(getApplicationContext(),"Foto SIN fecha",Toast.LENGTH_LONG).show();
+
+            e.printStackTrace();
+        }*/
+    }
+
+    private class SubirFotoServido extends AsyncTask<String,Integer,String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+            Generalidades gene=(Generalidades)getApplication();
+            String Rutafotos=gene.getCadena()+"webservices/guardarlectura.php";
+            HttpFileUploader uploader = new HttpFileUploader(Rutafotos+"", foto.toString());
+            try {
+                uploader.doStart(new FileInputStream("/"+foto.toString()));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
 }

@@ -163,7 +163,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <Button
@@ -180,5 +180,11 @@
             android:layout_weight="1"
             android:text="Entregado" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivFoto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@android:color/darker_gray" />
 
 </LinearLayout>
