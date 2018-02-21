@@ -367,45 +367,19 @@ public class DetalleDocumento extends AppCompatActivity {
                 ""+Latitud,
                 ""+Longitud
         );
-        /*Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
-        startActivity(acDocumentosPendientes);
-        finish();//Cierra este Intent(formulario)*/
         Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
-                /*Intent acDocumentosLista=new Intent(getApplicationContext(),DocumentosPendientes.class);
-                startActivity(acDocumentosLista);
-                        objDetalles.getNroSuministro(),
-                        objDetalles.getCodTipoCod(),
-                        objDetalles.getNombreTipoDoc(),
-                        objDetalles.getCodigoBarra(),
-                        objDetalles.getLatitud(),
-                        objDetalles.getLongitud(),
-                        objDetalles.getFechaAsigando(),
-                        objDetalles.getClienteDNI(),
-                        objDetalles.getClienteNombre()
-                );
-                db.updateDocumento(datosListview);*/
-
-        /*Generalidades general=(Generalidades)getApplication();
-        String url=general.getCadena()+"webservices/capturardatoscel.php";
-        obj=new HandleXml(url);
-        obj.fetchXML(1);
-        while (obj.parsingCompete);
-        String respuestaserv=obj.getEstadoEnvioDocumento();
-        Toast.makeText(getApplicationContext(),""+respuestaserv,Toast.LENGTH_SHORT).show();
-
-        if (respuestaserv.trim().equals("200")){
-            Intent acDocumentosPendientes=new Intent(getApplicationContext(),DocumentosPendientes.class);
-            startActivity(acDocumentosPendientes);
-            finish();//Cierra este Intent(formulario)
-        }*/
-
-        //Se toma foto
-        getCamara("nombreFoto");
-
         //Se envia datos al servidor
         SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
         Date fechaEjecutado = new Date();
         String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
+        //Se toma foto
+        String NombreFoto=objDetalle.getId()+"_"+objDetalle.getNroSuministro();//+"_"+sFechaEjecutado;
+
+
+        getCamara(""+NombreFoto);
+
+        //Se envia datos al servidor
+
         //Generalidades gen=(Generalidades)getApplication();
         new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
                 +"usuario="+usuario+"&password="+password+"&"
@@ -614,92 +588,14 @@ public class DetalleDocumento extends AppCompatActivity {
         if (requestCode == 1 && resultCode == RESULT_OK) {
 
             try {
-                loadImageFromFile(data);
+                loadImageFromFile();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
-//        ContentResolver cr=this.getContentResolver();
-//        Bitmap bit = null;
-//        //imagen.setBackgroundResource(0);
-//        try {
-//            bit = android.provider.MediaStore.Images.Media.getBitmap(cr, output);
-//
-//            //orientation
-//            int rotate = 0;
-//            try {
-//                ExifInterface exif = new ExifInterface(
-//                        file.getAbsolutePath());
-//                int orientation = exif.getAttributeInt(
-//                        ExifInterface.TAG_ORIENTATION,
-//                        ExifInterface.ORIENTATION_NORMAL);
-//
-//                switch (orientation) {
-//                    case ExifInterface.ORIENTATION_ROTATE_270:
-//                        rotate = 270;
-//                        break;
-//                    case ExifInterface.ORIENTATION_ROTATE_180:
-//                        rotate = 180;
-//                        break;
-//                    case ExifInterface.ORIENTATION_ROTATE_90:
-//                        rotate = 90;
-//                        break;
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            Matrix matrix = new Matrix();
-//            matrix.postRotate(rotate);
-//            bit = Bitmap.createBitmap(bit , 0, 0, bit.getWidth(), bit.getHeight(), matrix, true);
-//
-//            ivFoto.setImageBitmap(bit);
-//            bit=BitmapFactory.decodeResource(getResources(),R.id.ivFoto);
-
-
-            //Estampando fecha y hora a la foto
-
-            /*BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            Bitmap bitmap = BitmapFactory.decodeFile(getOutputMediaFile().getAbsolutePath());
-
-            //        Bitmap src = BitmapFactory.decodeResource(); // the original file is cuty.jpg i added in resources
-            Bitmap dest = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);*/
-
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//            String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
-//            Bitmap newBitmap=bit.copy(bit.getConfig(),true);
-//            Canvas cs = new Canvas(newBitmap);
-//            Paint tPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//            tPaint.setTextSize(35);
-//            tPaint.setColor(Color.BLUE);
-//            tPaint.setStyle(Paint.Style.FILL);
-//            cs.drawBitmap(bit, 0f, 0f, null);
-//            float height = tPaint.measureText("yY");
-//            cs.drawText(dateTime, 20f, height+15f, null);
-//            try {
-//                bit.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File("/sdcard/timeStampedImage.jpg")));
-//                Toast.makeText(getApplicationContext(),"Foto con fecha",Toast.LENGTH_LONG).show();
-//
-//            } catch (FileNotFoundException e) {
-//                // TODO Auto-generated catch block
-//                Toast.makeText(getApplicationContext(),"Foto SIN fecha",Toast.LENGTH_LONG).show();
-//
-//                e.printStackTrace();
-//            }
-
-//
-//        } catch (FileNotFoundException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-        //new SubirFotoServido();
-        //imagen.setImageBitmap(bit);
     }
 
-    public void loadImageFromFile(Intent data) throws FileNotFoundException {
+    public void loadImageFromFile() throws FileNotFoundException {
 
         ImageView view = (ImageView)this.findViewById(R.id.ivFoto);
         view.setVisibility(View.VISIBLE);
