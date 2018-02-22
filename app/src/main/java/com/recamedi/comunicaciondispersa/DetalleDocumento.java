@@ -15,6 +15,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.icu.text.UnicodeSetSpanner;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -27,6 +28,7 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -50,6 +52,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -91,7 +94,8 @@ public class DetalleDocumento extends AppCompatActivity {
     EditText etDni;
     EditText etLecturaMedidor;
 
-
+    Button btnCamara;
+    TextView tvFotosTomadas;
     Button btnEntrgado;
     Button btnRezagado;
     ImageView ivFoto;
@@ -112,6 +116,7 @@ public class DetalleDocumento extends AppCompatActivity {
     private Uri output;
     private String foto;
     private File file;
+    Fotografias tomarfoto;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,6 +127,8 @@ public class DetalleDocumento extends AppCompatActivity {
         usuario=gen.getUsuarioActual();
         password=gen.getPasswordActual();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        tomarfoto=new Fotografias(output,foto,file,this,this);
+        tomarfoto.verificarPermisosEscritura();
         if (!isLocationEnabled())
             showAlert();
         tvCodDoc = (TextView) findViewById(R.id.tvCodDoc);
@@ -130,7 +137,7 @@ public class DetalleDocumento extends AppCompatActivity {
         tvCodBarra = (TextView) findViewById(R.id.tvCodBarra);
         etDni = (EditText) findViewById(R.id.etDNI);
         etLecturaMedidor = (EditText) findViewById(R.id.etLecturaMedidor);
-
+        tvFotosTomadas=(TextView)findViewById(R.id.tvFotosTomadas);
         spEstado = (Spinner) findViewById(R.id.spEstado);
         spParentesco = (Spinner) findViewById(R.id.spParentesco);
 
@@ -182,6 +189,26 @@ public class DetalleDocumento extends AppCompatActivity {
                 RegistrarDocumentoTrabajo(objDetalle,"3");
             }
         });
+        btnCamara=(Button)findViewById(R.id.btnCamara);
+        btnCamara.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SimpleDateFormat fechaFormatoFoto = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss", Locale.getDefault());
+                Date fechaEjecutadoFoto = new Date();
+                String sFechaEjecutadoFoto = fechaFormatoFoto.format(fechaEjecutadoFoto);
+                //Se toma foto
+                String NombreFoto=objDetalle.getId()+"_"+objDetalle.getNroSuministro()+"_"+sFechaEjecutadoFoto;
+
+                                //Parametros de a foto
+                //        private Uri output;
+                //        private String foto;
+                //        private File file;
+                                //getCamara(""+NombreFoto);
+
+                tomarfoto.ObtenerCamara(NombreFoto);
+
+            }
+        });
         btnEntrgado = (Button) findViewById(R.id.btn_ddEntregado);
         btnEntrgado.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -192,11 +219,10 @@ public class DetalleDocumento extends AppCompatActivity {
             }
         });
         ivFoto=(ImageView)findViewById(R.id.ivFoto);
+
+
     }
-    public void StartService(View view){
-        Intent intent = new Intent(this,GPSMovil.class);
-        startService(intent);
-    }
+
     /*Ubicacion de GPS*/
     private boolean isLocationEnabled() {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
@@ -369,17 +395,12 @@ public class DetalleDocumento extends AppCompatActivity {
         );
         Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
         //Se envia datos al servidor
-        SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
-        Date fechaEjecutado = new Date();
-        String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
-        //Se toma foto
-        String NombreFoto=objDetalle.getId()+"_"+objDetalle.getNroSuministro();//+"_"+sFechaEjecutado;
-
-
-        getCamara(""+NombreFoto);
 
         //Se envia datos al servidor
 
+        SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
+        Date fechaEjecutado = new Date();
+        String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
         //Generalidades gen=(Generalidades)getApplication();
         new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
                 +"usuario="+usuario+"&password="+password+"&"
@@ -572,143 +593,61 @@ public class DetalleDocumento extends AppCompatActivity {
         }
         return new String(xmlDelServidor);
     }
-
-    //parametros paara tomar foto
-    private void getCamara(String NombreFoto){
-        foto = Environment.getExternalStorageDirectory() +"/"
-                +NombreFoto+".jpg";
-        file=new File(foto);
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        output = Uri.fromFile(file);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, output);
-        startActivityForResult(intent, 1);
-    }
+    int cantidadFotos=0;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1 && resultCode == RESULT_OK) {
 
             try {
-                loadImageFromFile();
+                cantidadFotos+=1;
+                tomarfoto.loadImageFromFile(ivFoto);
+                //String subirfoto=postArchivo(tomarfoto.getFile().toString());
+                        new Enviarfotos().execute(tomarfoto.getFile().toString());
+
+
+
+                tvFotosTomadas.setText("Cantidad de Fotos: "+cantidadFotos);
+                //tvFotosTomadas.append(tomarfoto.getFoto().toString()+"\n");
+
+                //loadImageFromFile();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public void loadImageFromFile() throws FileNotFoundException {
+    //Alguna Accion cuando el esta habilitado los permisos
+    @Override
+    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 2: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-        ImageView view = (ImageView)this.findViewById(R.id.ivFoto);
-        view.setVisibility(View.VISIBLE);
+                } else {
 
-
-        int targetW = view.getWidth();
-        int targetH = view.getHeight();
-
-        // Get the dimensions of the bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(foto, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
-        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(output));
-        view.setImageBitmap(bitmap);
-
-        Bitmap.Config config = bitmap.getConfig();
-        if(config == null){
-            config = Bitmap.Config.ARGB_8888;
-        }
-
-
-        Bitmap newBitmap = null;
-        newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), config);
-        Canvas newCanvas = new Canvas(newBitmap);
-
-        newCanvas.drawBitmap(bitmap, 0, 0, null);
-
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
-        String captionString = dateTime;
-        Paint paintText = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintText.setColor(Color.BLUE);
-        paintText.setTextSize(50);
-        paintText.setStyle(Paint.Style.FILL);
-        paintText.setShadowLayer(10f, 10f, 10f, Color.BLACK);
-
-        Rect rectText = new Rect();
-        paintText.getTextBounds(captionString, 0, captionString.length(), rectText);
-
-        newCanvas.drawText(captionString,
-                0, rectText.height(), paintText);
-
-//        Toast.makeText(getApplicationContext(),
-//                "drawText: " + captionString,
-//                Toast.LENGTH_LONG).show();
-
-        view.setImageBitmap(newBitmap);
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(foto);
-            newBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-            // PNG is a lossless format, the compression factor (100) is ignored
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                return;
             }
         }
-        /*SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
-
-        //Bitmap newBitmap=bit.copy(bit.getConfig(),true);
-        Canvas cs = new Canvas(bitmap);
-        Paint tPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        tPaint.setTextSize(35);
-        tPaint.setColor(Color.BLUE);
-        tPaint.setStyle(Paint.Style.FILL);
-        cs.drawBitmap(bitmap, 0f, 0f, null);
-        float height = tPaint.measureText("yY");
-        cs.drawText(dateTime, 20f, height+15f, null);
-        try {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(new File("/sdcard/timeStampedImage.jpg")));
-            Toast.makeText(getApplicationContext(),"Foto con fecha",Toast.LENGTH_LONG).show();
-
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            Toast.makeText(getApplicationContext(),"Foto SIN fecha",Toast.LENGTH_LONG).show();
-
-            e.printStackTrace();
-        }*/
     }
 
-    private class SubirFotoServido extends AsyncTask<String,Integer,String>{
+    private class Enviarfotos extends AsyncTask<String,Integer,String>{
 
         @Override
         protected String doInBackground(String... strings) {
-            Generalidades gene=(Generalidades)getApplication();
-            String Rutafotos=gene.getCadena()+"webservices/guardarlectura.php";
-            HttpFileUploader uploader = new HttpFileUploader(Rutafotos+"", foto.toString());
-            try {
-                uploader.doStart(new FileInputStream("/"+foto.toString()));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            return null;
+            //String respuesta=postArchivo(strings[0]);
+            SubirArchivos sa=new SubirArchivos(strings[0],gen.getCadena()+"webservices/guardarfoto.php");
+            String respuesta=sa.postArchivo();
+            return respuesta;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            String subirfoto= s;
+            Toast.makeText(getApplicationContext(),""+subirfoto,Toast.LENGTH_LONG).show();
         }
     }
-
 }

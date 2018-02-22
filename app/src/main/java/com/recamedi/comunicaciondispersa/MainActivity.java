@@ -144,19 +144,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        if (!runtine_permissions()){
+            GeoLocation geoLocation=new GeoLocation(this);
+            geoLocation.IniciarServicio();
+            geoLocation.muestraPosicionActual();
+            Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+        }
 
-        GeoLocation geoLocation=new GeoLocation(this);
-        geoLocation.IniciarServicio();
-        geoLocation.muestraPosicionActual();
-        Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
 
-        /*Intent intent = new Intent(this, Servicios.class);
-        startService(intent);*/
-
-        /*if (!runtine_permissions()){
+        if (!runtine_permissions()){
             enable_bottuns();
 
-        }*/
+        }
 
 
     }
