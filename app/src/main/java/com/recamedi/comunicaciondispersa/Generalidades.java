@@ -1,9 +1,12 @@
 package com.recamedi.comunicaciondispersa;
 
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.support.v7.app.AlertDialog;
 
 /**
  * Created by Renel01 on 25/01/2018.
@@ -27,7 +30,11 @@ import android.content.SharedPreferences;
 public class Generalidades extends Application {
 
     private String RutawebAppGeneralidades;
+    private Activity actividad;
 
+
+
+    private Context ConextoGeneral;
 
 
     private int TiempoConexion;
@@ -41,6 +48,21 @@ public class Generalidades extends Application {
     //private String cadena="holas";
     public Generalidades(){
 
+    }
+    public Activity getActividad() {
+        return actividad;
+    }
+
+    public void setActividad(Activity actividad) {
+        this.actividad = actividad;
+    }
+
+    public Context getConextoGeneral() {
+        return ConextoGeneral;
+    }
+
+    public void setConextoGeneral(Context conextoGeneral) {
+        ConextoGeneral = conextoGeneral;
     }
     public String getCadena() {
         return RutawebAppGeneralidades;
@@ -77,5 +99,28 @@ public class Generalidades extends Application {
 
     public void setPasswordActual(String passwordActual) {
         PasswordActual = passwordActual;
+    }
+    public AlertDialog createSimpleDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Titulo")
+                .setMessage("El Mensaje para el usuario")
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onPossitiveButtonClick();
+                            }
+                        })
+                .setNegativeButton("CANCELAR",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onNegativeButtonClick();
+                            }
+                        });
+
+        return builder.create();
+
     }
 }

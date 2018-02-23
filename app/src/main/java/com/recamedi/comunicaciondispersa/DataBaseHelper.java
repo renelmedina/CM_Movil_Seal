@@ -16,7 +16,7 @@ import java.util.List;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     //Base de datos
-    private static final int DATABASE_VER=8;
+    private static final int DATABASE_VER=9;
     private static final String DATABASE_NAME="COMDIS";//comunicacion dispersa
 
     //Tabla DE lecturas
@@ -52,6 +52,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String KEY_TNL_PASSWORDPERSONAL="PaswwordPersonal";
     private static final String KEY_TNL_NOMBREPERSONAL="NombrePersonal";
     private static final String KEY_TNL_FECHAACCESO="FechaAcceso";
+
+    //Tabla de fotografias
+    private static final String TABLE_NAME_FOTOS="Fotos";
+    private static final String KEY_TNF_ID="IdFotos";
+    private static final String KEY_TNF_ID_FotosOnnline="IdFotosOnline";
+    private static final String KEY_TNL_ID_TNF="IdDocumento";
+    private static final String KEY_TNF_RUTAFOTO="RutaFoto";
+    private static final String KEY_TNF_ESTADOFOTO="EstadoSubidaFoto";
+    private static final String KEY_TNF_FECHA="FechaFoto";
 
 
     public DataBaseHelper(Context context) {
@@ -95,6 +104,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 +KEY_TNL_FECHAACCESO+" TEXT"
                 +")";
         sqLiteDatabase.execSQL(CREATE_TABLE);
+        //Creando la Tabla de Fotos
+
+        CREATE_TABLE="CREATE TABLE IF NOT EXISTS "+TABLE_NAME_FOTOS+" ("
+                +KEY_TNF_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"
+                +KEY_TNL_ID_TNF+" TEXT,"
+                +KEY_TNF_ID_FotosOnnline+" TEXT,"
+                +KEY_TNF_RUTAFOTO+" TEXT,"
+                +KEY_TNF_ESTADOFOTO+" TEXT,"
+                +KEY_TNF_FECHA+" TEXT"
+                +")";
+        sqLiteDatabase.execSQL(CREATE_TABLE);
     }
 
     @Override
@@ -102,6 +122,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
         onCreate(sqLiteDatabase);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME_LOGIN);
+        onCreate(sqLiteDatabase);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME_FOTOS);
         onCreate(sqLiteDatabase);
 
     }
@@ -118,6 +140,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             //Si no existe registros devuelve false
             return false;
         }
+    }
+    public long AgregarFoto(String CodDocumento,String RutaFotoCelular,String EstadoFoto, String FechaFoto){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values= new ContentValues();
+        values.put(KEY_TNL_ID_TNF,CodDocumento);
+        values.put(KEY_TNF_RUTAFOTO,RutaFotoCelular);
+        values.put(KEY_TNF_ESTADOFOTO,EstadoFoto);
+        values.put(KEY_TNF_FECHA,FechaFoto);
+        long cantidadFotosRegistrado= db.insert(TABLE_NAME_FOTOS,null,values);
+
+        db.close();
+        return cantidadFotosRegistrado;
     }
     public void AgregarUsuario(String CodigoPersonal, String UsuarioPersonal, String PasswordPersonal, String NombrePersonal, String FechaAcceso){
         SQLiteDatabase db=this.getWritableDatabase();
@@ -165,7 +199,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_NAME,null,values);
         db.close();
     }
-    public void updateDocumento(int codDocumento,String EstadoEntrega, String EstadoFirma, String Parentesco,String DniRecepcion, String LecturaMedidor,String FechaVisita, String LatitudVisita, String LongitudVisita){
+    public int updateDocumento(int codDocumento,String EstadoEntrega, String EstadoFirma, String Parentesco,String DniRecepcion, String LecturaMedidor,String FechaVisita, String LatitudVisita, String LongitudVisita){
         SQLiteDatabase db=this.getWritableDatabase();
         ContentValues values=new ContentValues();
         values.put(KEY_EstadoEntrega,EstadoEntrega);
@@ -181,7 +215,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 values,KEY_Codigos_codigodoc+" =?",new String[]{codDocumento});*/
         /*return db.update(TABLE_NAME,
                 values,KEY_Codigos_codigodoc+" ='"+codDocumento+"'",null);*/
-        db.update(TABLE_NAME,values,KEY_Codigos_codigodoc+" ="+codDocumento,null);
+        return db.update(TABLE_NAME,values,KEY_Codigos_codigodoc+" ="+codDocumento,null);
         //db.update("sdfsd","sdfsdfsd","asdfasdfasd");
 
     }

@@ -76,35 +76,24 @@ import java.util.List;
 import java.util.Locale;
 
 public class DetalleDocumento extends AppCompatActivity {
-    String RespuestaServidorGeneral;
-
     LocationManager locationManager;
-
+    DatosListview objDetalle;
     TextView tvCodDoc;
     TextView tvNroSuministro;
     TextView tvTipoDoc;
     TextView tvCodBarra;
-
     Spinner spEstado;
     Spinner spParentesco;
-
     ArrayAdapter<CharSequence> aaEstado;
     ArrayAdapter<CharSequence> aaParentesco;
-
     EditText etDni;
     EditText etLecturaMedidor;
-
     Button btnCamara;
     TextView tvFotosTomadas;
     Button btnEntrgado;
     Button btnRezagado;
     ImageView ivFoto;
-
-
     DataBaseHelper db;
-
-    private HandleXml obj;
-
     Double Latitud = 0.0;
     Double Longitud = 0.0;
 
@@ -117,6 +106,9 @@ public class DetalleDocumento extends AppCompatActivity {
     private String foto;
     private File file;
     Fotografias tomarfoto;
+    private int cantidadFotos=0;
+    private boolean registrarfotoEntregado=false;
+    private boolean registrarfotoRezagado=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -175,7 +167,7 @@ public class DetalleDocumento extends AppCompatActivity {
 
         db = new DataBaseHelper(this);
 
-        final DatosListview objDetalle = (DatosListview) getIntent().getExtras().getSerializable("objeto");
+        objDetalle = (DatosListview) getIntent().getExtras().getSerializable("objeto");
         tvCodDoc.setText(objDetalle.getTitulo());
         tvNroSuministro.setText(objDetalle.getNroSuministro());
         tvTipoDoc.setText(objDetalle.getNombreTipoDoc());
@@ -185,42 +177,55 @@ public class DetalleDocumento extends AppCompatActivity {
         btnRezagado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                miUbicacion();
-                RegistrarDocumentoTrabajo(objDetalle,"3");
+                //miUbicacion();
+                //RegistrarDocumentoTrabajo(objDetalle,"3");//3=Rezagado
+
+                registrarfotoRezagado=true;
+                if (cantidadFotos<1){
+                    TomarFotografia();
+                }
+                if (cantidadFotos>0){
+                    miUbicacion();
+                    RegistrarDocumentoTrabajo(objDetalle,"3");//3=Rezagado
+                }
+                //registrarfotoRezagado
+
             }
         });
         btnCamara=(Button)findViewById(R.id.btnCamara);
         btnCamara.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SimpleDateFormat fechaFormatoFoto = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss", Locale.getDefault());
-                Date fechaEjecutadoFoto = new Date();
-                String sFechaEjecutadoFoto = fechaFormatoFoto.format(fechaEjecutadoFoto);
-                //Se toma foto
-                String NombreFoto=objDetalle.getId()+"_"+objDetalle.getNroSuministro()+"_"+sFechaEjecutadoFoto;
-
-                                //Parametros de a foto
-                //        private Uri output;
-                //        private String foto;
-                //        private File file;
-                                //getCamara(""+NombreFoto);
-
-                tomarfoto.ObtenerCamara(NombreFoto);
-
+                TomarFotografia();
             }
         });
         btnEntrgado = (Button) findViewById(R.id.btn_ddEntregado);
         btnEntrgado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                miUbicacion();
-                RegistrarDocumentoTrabajo(objDetalle,"4");
+                registrarfotoEntregado=true;
+                if (cantidadFotos<1){
+                    TomarFotografia();
+                }
+                if (cantidadFotos>0){
+                    miUbicacion();
+                    RegistrarDocumentoTrabajo(objDetalle,"4");//4=Entregado A cliente
+                }
+
 
             }
         });
         ivFoto=(ImageView)findViewById(R.id.ivFoto);
 
+    }
 
+    private void TomarFotografia() {
+        SimpleDateFormat fechaFormatoFoto = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss", Locale.getDefault());
+        Date fechaEjecutadoFoto = new Date();
+        String sFechaEjecutadoFoto = fechaFormatoFoto.format(fechaEjecutadoFoto);
+        //Se toma foto
+        String NombreFoto=objDetalle.getId()+"_"+objDetalle.getNroSuministro()+"_"+sFechaEjecutadoFoto;
+        tomarfoto.ObtenerCamara(NombreFoto);
     }
 
     /*Ubicacion de GPS*/
@@ -382,7 +387,8 @@ public class DetalleDocumento extends AppCompatActivity {
         if (!etLecturaMedidor.getText().equals("")){
             LecturaMedidor=etLecturaMedidor.getText().toString();
         }
-        db.updateDocumento(
+
+        int cantidadActualizado= db.updateDocumento(
                 objDetalle.getId(),
                 ""+EstadoEntrega,//3=Doc. Rezagado,4=Doc. E. Cliente, segun la BD en Mysql
                 ""+ValorEstado,//Las comillas simples no tienen ningun valor, solo es para conservar el tip de ayuda de android studio
@@ -393,31 +399,41 @@ public class DetalleDocumento extends AppCompatActivity {
                 ""+Latitud,
                 ""+Longitud
         );
-        Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
-        //Se envia datos al servidor
+        if (cantidadActualizado>0){
+            Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
+            //Se envia datos al servidor
+            SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
+            Date fechaEjecutado = new Date();
+            String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
+            //Generalidades gen=(Generalidades)getApplication();
+            new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
+                    +"usuario="+usuario+"&password="+password+"&"
+                    +"DocumentosTrabajoID="+objDetalle.getId()+"&"
+                    +"FechaAsignado="+objDetalle.getFechaAsigando()+"&"
+                    +"FechaEjecutado="+sFechaEjecutado+"&"
+                    +"Estado="+EstadoEntrega+"&"
+                    +"EstadoSeal="+ValorEstado+"&"
+                    +"NombreRecepcionador=&"
+                    +"DNIRecepcionador="+etDni.getText()+"&"
+                    +"Parentesco="+ValorParentesco+"&"
+                    +"LecturaMedidor="+LecturaMedidor+"&"
+                    +"LatitudVisita="+Latitud+"&"
+                    +"LongitudVisita="+Longitud+"&"
+                    +"Observaciones="
+            );
+            //Aqui debe de abrir nuevamente la lista de documentos pendientes
 
-        //Se envia datos al servidor
-
-        SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
-        Date fechaEjecutado = new Date();
-        String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
-        //Generalidades gen=(Generalidades)getApplication();
-        new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
-                +"usuario="+usuario+"&password="+password+"&"
-                +"DocumentosTrabajoID="+objDetalle.getId()+"&"
-                +"FechaAsignado="+objDetalle.getFechaAsigando()+"&"
-                +"FechaEjecutado="+sFechaEjecutado+"&"
-                +"Estado="+EstadoEntrega+"&"
-                +"EstadoSeal="+ValorEstado+"&"
-                +"NombreRecepcionador=&"
-                +"DNIRecepcionador="+etDni.getText()+"&"
-                +"Parentesco="+ValorParentesco+"&"
-                +"LecturaMedidor="+LecturaMedidor+"&"
-                +"LatitudVisita="+Latitud+"&"
-                +"LongitudVisita="+Longitud+"&"
-                +"Observaciones="
-
-        );
+        }else{
+            AlertDialog.Builder mensajitoalusurio=new AlertDialog.Builder(this);
+            mensajitoalusurio.setTitle("No se registro");
+            mensajitoalusurio.setMessage("No se registro esta documentacion, intenta nuevamente");
+            mensajitoalusurio.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    //Se hace algo para evitar que pase a la siguiente ventana, para que permanesca aqui hasta que se complete la elctura
+                }
+            });
+        }
     }
 
     private class RegistrarDatosServidor extends AsyncTask<String,Integer,String>{
@@ -510,33 +526,32 @@ public class DetalleDocumento extends AppCompatActivity {
                         objDetallito.getId(),
                         "1"//1= Enviado
                 );
-            }else if (Estadorespuesta.equals("-2")){//Que el usuario y contraseña son incorrectos y no se inserto
+            }else if (Estadorespuesta.equals("-2")){//problemas de lectura y escritura en android
                 //Toast.makeText(getApplicationContext(),"Agregados: "+i+" , Duplicados eliminados: "+FilasEliminadas,Toast.LENGTH_SHORT).show();
                 db.updateDocumento(
                         objDetallito.getId(),
                         "0"//0= No enviado
                 );
                 Snackbar.make(btnEntrgado, "Usuario y contraeña incorrectos("+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
-            }else if (Estadorespuesta.equals("-3")){
+            }else if (Estadorespuesta.equals("-3")){//que probablemete no se leyo bien los datos recibidos o no hay conexion a internet o servidor equivocado
                 db.updateDocumento(
                         objDetallito.getId(),
                         "0"//0= No enviado
                 );
                 Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
-            }else if(Estadorespuesta.equals("-2")){
+            }else if(Estadorespuesta.equals("-1")){//que hubo algun problema leyendo el archivo xml devuelto por elservidor
                 db.updateDocumento(
                         objDetallito.getId(),
                         "0"//0= No enviado
                 );
-                Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
-            }else if(Estadorespuesta.equals("-1")){
+                Snackbar.make(btnEntrgado, "Error al leer respuesta del servidor(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
+            }else if (Estadorespuesta.equals("0")){//Usuario y contraseñas incorrectos, no se registro Online
                 db.updateDocumento(
                         objDetallito.getId(),
                         "0"//0= No enviado
                 );
-                Snackbar.make(btnEntrgado, "Sin Conexion. Verifica tu conexion a internet(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
-            }else {
-
+                Toast.makeText(getApplicationContext(),"Usuario y Contraseña incorrectos(cod:"+Estadorespuesta+")",Toast.LENGTH_SHORT).show();
+                //Snackbar.make(btnEntrgado, "Usuario y Contraseña incorrectos(cod:"+Estadorespuesta+")", Snackbar.LENGTH_LONG).show();
             }
 
         }
@@ -593,7 +608,9 @@ public class DetalleDocumento extends AppCompatActivity {
         }
         return new String(xmlDelServidor);
     }
-    int cantidadFotos=0;
+
+
+    //Recibe los datos(en este caso las fotografias), para procesarlas
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1 && resultCode == RESULT_OK) {
@@ -602,17 +619,52 @@ public class DetalleDocumento extends AppCompatActivity {
                 cantidadFotos+=1;
                 tomarfoto.loadImageFromFile(ivFoto);
                 //String subirfoto=postArchivo(tomarfoto.getFile().toString());
-                        new Enviarfotos().execute(tomarfoto.getFile().toString());
-
-
-
+                new Enviarfotos().execute(tomarfoto.getFile().toString());
                 tvFotosTomadas.setText("Cantidad de Fotos: "+cantidadFotos);
                 //tvFotosTomadas.append(tomarfoto.getFoto().toString()+"\n");
-
+                //Aqui se registra en la BD Offline
+                InsertarFotoOffline(tomarfoto.getFile().toString());
+                if(registrarfotoEntregado==true){
+                    miUbicacion();
+                    RegistrarDocumentoTrabajo(objDetalle,"4");//4=Entregado A cliente
+                }
+                if (registrarfotoRezagado=true){
+                    miUbicacion();
+                    RegistrarDocumentoTrabajo(objDetalle,"3");//3=Rezagado
+                }
                 //loadImageFromFile();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void InsertarFotoOffline(String rutafoto) {
+        SimpleDateFormat fechaFormatoFoto = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault());
+        Date fechaEjecutadoFoto = new Date();
+        String sFechaEjecutadoFoto = fechaFormatoFoto.format(fechaEjecutadoFoto);
+        long cantidadRegistrado= db.AgregarFoto(
+                ""+objDetalle.getId(),
+                ""+rutafoto,
+                "",
+                ""+sFechaEjecutadoFoto
+        );
+        if (cantidadRegistrado!=-1){//-1 significa que que hubo problemas al registrar esta foto en BD
+            if (cantidadRegistrado>0){//cantidadRegistrado, tomara el ultimo ID registrado
+                Toast.makeText(getApplicationContext(),"Fotos regitradas: "+cantidadRegistrado,Toast.LENGTH_LONG).show();
+            }else {
+                //Toast.makeText(getApplicationContext(),"Fotos NO regitradas: "+cantidadRegistrado,Toast.LENGTH_LONG).show();
+
+            }
+        }else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Sin Foto");
+            builder.setMessage("No se registro la foto, vuelve a tomar la foto.("+cantidadRegistrado+")")
+            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    TomarFotografia();
+                }
+            }).show();
         }
     }
 

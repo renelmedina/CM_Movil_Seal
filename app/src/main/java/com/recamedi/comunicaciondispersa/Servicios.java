@@ -18,7 +18,7 @@ public class Servicios extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        GeoLocation geoLocation= new GeoLocation(act);
+        GeoLocation geoLocation= new GeoLocation(act,null);
         geoLocation.IniciarServicio();
         geoLocation.muestraPosicionActual();
     }

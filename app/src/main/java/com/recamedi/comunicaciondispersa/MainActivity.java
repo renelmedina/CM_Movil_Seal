@@ -3,6 +3,7 @@ package com.recamedi.comunicaciondispersa;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -10,11 +11,13 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -46,6 +49,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static android.content.DialogInterface.*;
+
 public class MainActivity extends AppCompatActivity {
 
     ImageView ivSincronizarDatos;
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar pbEstadoSincronizacion;
 
     private BroadcastReceiver broadcastReceiver;
+    private BroadcastReceiver broadcastReceiverGPS;
 
     Button btnActivarGPS;
 
@@ -75,10 +81,35 @@ public class MainActivity extends AppCompatActivity {
                 public void onReceive(Context context, Intent intent) {
                     Toast.makeText(getApplicationContext(),"Coordenadas: " +intent.getExtras().get("coordinates"),Toast.LENGTH_SHORT).show();
                     tvEjemplo.append("\n"+intent.getExtras().get("coordinates"));
+
+                    /*Toast.makeText(getApplicationContext(),"El GPS esta: " +intent.getExtras().get("Valor"),Toast.LENGTH_SHORT).show();
+                    if (intent.getExtras().get("Valor").equals("desactivado")){
+                        createSimpleDialog().show();
+                    }*/
+
                 }
             };
         }
         registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
+        //registerReceiver(broadcastReceiver,new IntentFilter("gps_desactivado"));
+        if (broadcastReceiverGPS==null){
+            broadcastReceiverGPS=new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    /*Toast.makeText(getApplicationContext(),"Coordenadas: " +intent.getExtras().get("coordinates"),Toast.LENGTH_SHORT).show();
+                    tvEjemplo.append("\n"+intent.getExtras().get("coordinates"));*/
+
+                    Toast.makeText(getApplicationContext(),"El GPS esta: " +intent.getExtras().get("Valor"),Toast.LENGTH_SHORT).show();
+                    if (intent.getExtras().get("Valor").equals("desactivado")){
+                        createSimpleDialog().show();
+                    }
+
+
+                }
+            };
+        }
+        //registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
+        registerReceiver(broadcastReceiverGPS,new IntentFilter("gps_desactivado"));
     }
 
     @Override
@@ -105,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         //Base de Datos
         db= new DataBaseHelper(this);
         gen= (Generalidades)this.getApplication();
+        //gen.setConextoGeneral(this);
 
         btnActivarGPS=(Button)findViewById(R.id.btnActivarGPS);
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -144,22 +176,36 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        GeoLocation geoLocation=new GeoLocation(this,this);
+        geoLocation.IniciarServicio();
+        if (geoLocation.checkLocation()){
+
+        }
+       /* int permiso=0;
+        while (permiso==0){
+            if (runtine_permissions()==false){
+
+            }
+        }*/
         if (!runtine_permissions()){
-            GeoLocation geoLocation=new GeoLocation(this);
-            geoLocation.IniciarServicio();
+            //enable_bottuns();
+            Toast.makeText(getApplicationContext(), "iniciando Servicio", Toast.LENGTH_SHORT).show();
+            Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+
+            startService(i);
+
+        }else{
+
+
             geoLocation.muestraPosicionActual();
-            Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "Latitud: "+geoLocation.getLatitud()+" Longitud: "+geoLocation.getLongitud(), Toast.LENGTH_SHORT).show();
         }
-
-
-        if (!runtine_permissions()){
-            enable_bottuns();
-
-        }
+        geoLocation.muestraPosicionActual();
 
 
     }
-    private void enable_bottuns(){
+    /*private void enable_bottuns(){
         btnActivarGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -169,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                 startService(i);
             }
         });
-    }
+    }*/
 
     private Boolean runtine_permissions(){
         if (Build.VERSION.SDK_INT>=23&& ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
@@ -582,4 +628,32 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(opcion_menu);
     }
+
+    public AlertDialog createSimpleDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("GPS Desactivado")
+                .setMessage("El GPS debe estar activado siempre.¿Activarlo ahora?")
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onPossitiveButtonClick();
+                                Intent i=new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(i);
+                            }
+                        })
+                .setNegativeButton("CANCELAR",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onNegativeButtonClick();
+                            }
+                        });
+
+        return builder.create();
+
+    }
+
 }
