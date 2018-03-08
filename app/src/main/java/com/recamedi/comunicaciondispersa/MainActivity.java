@@ -563,6 +563,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(actLogin);
 
     }
+    public void EjecutarPrincipal(){
+        Intent actprincipal=new Intent(getApplicationContext(),MenuLateralActivity.class);
+        startActivity(actprincipal);
+
+    }
     public void EjecutarConfiguraciones(){
         Intent actConfiguracione = new Intent(this,Configuraciones.class);
         startActivity(actConfiguracione);
@@ -598,6 +603,7 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.itEnviarDatos) {
+            EjecutarPrincipal();
             return true;
         }
         if (id == R.id.itReenviarDatos) {

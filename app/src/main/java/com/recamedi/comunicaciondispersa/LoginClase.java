@@ -77,6 +77,8 @@ public class LoginClase extends AppCompatActivity {
 
     //Obteniendo Datos
     Generalidades gen;//= (Generalidades)this.getApplication();
+
+    String CodigoPersonal="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,36 +114,10 @@ public class LoginClase extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                //new ConsultarDatos().execute("http://192.168.1.34/clientes/accsac.com/Aplicaciones/seal/comunicaciondispersa/login.php");
-                //grabar(null);
-
-                /*chkGuardasCredenciales=(CheckBox)findViewById(R.id.chkRecordarCredenciales);
-                if (chkGuardasCredenciales.isChecked()){
-                    guardarPreferencias();
-                }*/
                 IniciarSession(null);
-
 
             }
         });
-
-
-
-
-
-        /*String filename = "myfile";
-        String string = "Hello world!";
-        FileOutputStream outputStream;
-
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(string.getBytes());
-            outputStream.close();
-            tvEstadoSession.setText("Archivo Creado");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
 
     }
     // al abrir la aplicación, guardamos preferencias
@@ -163,12 +139,13 @@ public class LoginClase extends AppCompatActivity {
         editor.putBoolean("preferenciasGuardadas", true);
         editor.putString("usuario", etUsuario.getText().toString());
         editor.putString("password", etPassword.getText().toString());
+        editor.putString("codper", CodigoPersonal);
         editor.commit();
         Toast.makeText(this, "Guardando preferencias", Toast.LENGTH_SHORT).show();
     }
 
     //cargar configuración aplicación Android usando SharedPreferences
-    public void cargarPreferencias(){
+        public void cargarPreferencias(){
         SharedPreferences prefs = getSharedPreferences("preferenciasMiApp", Context.MODE_PRIVATE);
         this.prUsuario = prefs.getString("usuario", "valor por defecto");
         this.prPassword = prefs.getString("password", "valor por defecto");
@@ -208,11 +185,14 @@ public class LoginClase extends AppCompatActivity {
         DataBaseHelper db;
         db= new DataBaseHelper(getApplicationContext());
         Boolean AccesoCorrecto=db.LoginSistemaOffline(""+etUsuario.getText(),""+etPassword.getText());
-        Intent acMainActivity=new Intent(getApplicationContext(),MainActivity.class);
+        /*Intent acMainActivity=new Intent(getApplicationContext(),MainActivity.class);
         acMainActivity.putExtra("acLoginUser",etUsuario.getText().toString());
-        acMainActivity.putExtra("acLoginPassword",etPassword.getText().toString());
+        acMainActivity.putExtra("acLoginPassword",etPassword.getText().toString());*/
+
+        Intent actprincipal=new Intent(getApplicationContext(),MenuLateralActivity.class);
+        //startActivity(actprincipal);
         if (AccesoCorrecto){
-            startActivity(acMainActivity);
+            startActivity(actprincipal);
             finish();
         }else {
             new ConsultarDatos().execute(gen.getCadena()+"webservices/logincelulares.php?usuario="+etUsuario.getText()+"&password="+etPassword.getText());
@@ -224,25 +204,6 @@ public class LoginClase extends AppCompatActivity {
             guardarPreferencias();
         }
 
-
-        /*tvEstadoSession.setText("Iniciando Session remota...");
-        Generalidades general=(Generalidades)getApplication();
-        String url=general.getCadena()+"webservices/logincelulares.php";
-        obj=new HandleXml(url);
-        obj.fetchXML(2);
-        //Toast.makeText(getApplicationContext(),"Sincronizando...", Toast.LENGTH_SHORT).show();
-
-        while (obj.parsingCompete);
-
-        if (obj.getCodigoestadologin().equals("0")){//0 significa que no existe el servidor
-            tvEstadoSession.setText("Servidor NO Ubicado !!!");
-            return;
-        }
-        if (obj.getCodigoestadologin().equals("1")){
-            tvEstadoSession.setText("Acceso Correcto");
-        }else{
-            tvEstadoSession.setText(obj.getCodigoestadologin());
-        }*/
 
     }
     /*Leer archivos o string del formato XML*/
@@ -296,6 +257,7 @@ public class LoginClase extends AppCompatActivity {
                             }
                         }else if (name.equals("usuario")){
                             DatosSessionOnline.add(xpp.getAttributeValue(null,"codigopersonal"));
+
                             DatosSessionOnline.add(xpp.getAttributeValue(null,"nombrepersonal"));
                             //codigopersonallogin=xpp.getAttributeValue(null,"codigopersonal");
                             //nombrepersonal=xpp.getAttributeValue(null,"nombrepersonal");;
@@ -329,28 +291,7 @@ public class LoginClase extends AppCompatActivity {
 
 
 
-    /*Consultar datos de internet*/
-    private class CargarDatos extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
 
-            // params comes from the execute() call: params[0] is the url.
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                tvEstadoSession.setText("No se pudo cargar");
-                return "Unable to retrieve web page. URL may be invalid.";
-            }
-
-        }
-        // onPostExecute displays the results of the AsyncTask.
-        @Override
-        protected void onPostExecute(String result) {
-
-            Toast.makeText(getApplicationContext(), "Se almacenaron los datos correctamente", Toast.LENGTH_LONG).show();
-
-        }
-    }
 
 
     private class ConsultarDatos extends AsyncTask<String, Void, String> {
@@ -389,7 +330,9 @@ public class LoginClase extends AppCompatActivity {
             //LeerXml(null);
             String Estadorespuesta=LeerXml(null,""+xmlTexto);
             String textomensaje;
-            Intent acMainActivity=new Intent(getApplicationContext(),MainActivity.class);
+            //Intent actprincipal=new Intent(getApplicationContext(),MenuLateralActivity.class);
+
+            Intent acMainActivity=new Intent(getApplicationContext(),MenuLateralActivity.class);
             acMainActivity.putExtra("acLoginUser",etUsuario.getText().toString());
             acMainActivity.putExtra("acLoginPassword",etPassword.getText().toString());
             switch (Estadorespuesta){
@@ -434,6 +377,8 @@ public class LoginClase extends AppCompatActivity {
                                 ""+DatosSessionOnline.get(4),
                                 ""+DatosSessionOnline.get(2)
                         );
+                        CodigoPersonal=DatosSessionOnline.get(3);
+                        guardarPreferencias();
                     }
                     startActivity(acMainActivity);
                     finish();

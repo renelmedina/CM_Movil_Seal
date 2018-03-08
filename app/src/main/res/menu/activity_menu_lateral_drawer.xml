@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_verdocumentos"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Ver Documentos" />
+        <!--<item
+            android:id="@+id/nav_gallery"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Gallery" />
+        <item
+            android:id="@+id/nav_slideshow"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Slideshow" />-->
+        <item
+            android:id="@+id/nav_configuraciones"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Configuraciones" />
+    </group>
+
+    <item android:title="Datos Onlinne">
+        <menu>
+            <item
+                android:id="@+id/nav_sincronizar"
+                android:icon="@android:drawable/ic_popup_sync"
+                android:title="Sincronizar Datos" />
+            <item
+                android:id="@+id/nav_EnviarDatos"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Enviar Datos" />
+        </menu>
+    </item>
+
+</menu>

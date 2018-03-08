@@ -72,6 +72,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -109,6 +110,10 @@ public class DetalleDocumento extends AppCompatActivity {
     private int cantidadFotos=0;
     private boolean registrarfotoEntregado=false;
     private boolean registrarfotoRezagado=false;
+
+    //ID de la tabla MYSQL VisitasCampo, Dato devuelto por el servidor cuando se registra un documento entregado, para registrarlo en la BD fotos
+    private int IdObtenidoServidor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -284,6 +289,7 @@ public class DetalleDocumento extends AppCompatActivity {
     };
 
     private void miUbicacion() {
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             return;
@@ -296,9 +302,12 @@ public class DetalleDocumento extends AppCompatActivity {
         if (location!=null){
             Longitud = location.getLongitude();
             Latitud = location.getLatitude();
+        }else {
+            Longitud = 0.0;
+            Latitud = 0.0;
         }
-        Toast.makeText(getApplicationContext(),"Longitud: "+Longitud+" Latitud: "+Latitud,Toast.LENGTH_SHORT).show();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,15000,0,locListener);
+        //Toast.makeText(getApplicationContext(),"Longitud: "+Longitud+" Latitud: "+Latitud,Toast.LENGTH_SHORT).show();
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,0,locListener);
     }
     private void RegistrarDocumentoTrabajo(DatosListview objDetalle, String EstadoEntrega) {
         int indiceEstado=spEstado.getSelectedItemPosition();
@@ -308,7 +317,7 @@ public class DetalleDocumento extends AppCompatActivity {
                 ValorEstado="10";//10. Con firma
                 break;
             case 1:
-                ValorEstado="11";//11. Sin firma<
+                ValorEstado="11";//11. Sin firma
                 break;
             case 2:
                 ValorEstado="12";//12. Ausente
@@ -388,52 +397,73 @@ public class DetalleDocumento extends AppCompatActivity {
             LecturaMedidor=etLecturaMedidor.getText().toString();
         }
 
-        int cantidadActualizado= db.updateDocumento(
-                objDetalle.getId(),
-                ""+EstadoEntrega,//3=Doc. Rezagado,4=Doc. E. Cliente, segun la BD en Mysql
-                ""+ValorEstado,//Las comillas simples no tienen ningun valor, solo es para conservar el tip de ayuda de android studio
-                ""+ValorParentesco,
-                ""+DniRecepion,
-                ""+LecturaMedidor,
-                ""+fecha,
-                ""+Latitud,
-                ""+Longitud
-        );
-        if (cantidadActualizado>0){
-            Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
-            //Se envia datos al servidor
-            SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
-            Date fechaEjecutado = new Date();
-            String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
-            //Generalidades gen=(Generalidades)getApplication();
-            new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
-                    +"usuario="+usuario+"&password="+password+"&"
-                    +"DocumentosTrabajoID="+objDetalle.getId()+"&"
-                    +"FechaAsignado="+objDetalle.getFechaAsigando()+"&"
-                    +"FechaEjecutado="+sFechaEjecutado+"&"
-                    +"Estado="+EstadoEntrega+"&"
-                    +"EstadoSeal="+ValorEstado+"&"
-                    +"NombreRecepcionador=&"
-                    +"DNIRecepcionador="+etDni.getText()+"&"
-                    +"Parentesco="+ValorParentesco+"&"
-                    +"LecturaMedidor="+LecturaMedidor+"&"
-                    +"LatitudVisita="+Latitud+"&"
-                    +"LongitudVisita="+Longitud+"&"
-                    +"Observaciones="
+        //Verificamos que el GPS este activado y que tenga coordenadas correctas.
+        Toast.makeText(getApplicationContext(),"Latitud--"+Latitud+", Long---"+Longitud,Toast.LENGTH_LONG).show();
+        if (Latitud!=0 && Longitud!=0){
+            int cantidadActualizado= db.updateDocumento(
+                    objDetalle.getId(),
+                    ""+EstadoEntrega,//3=Doc. Rezagado,4=Doc. E. Cliente, segun la BD en Mysql
+                    ""+ValorEstado,//Las comillas simples no tienen ningun valor, solo es para conservar el tip de ayuda de android studio
+                    ""+ValorParentesco,
+                    ""+DniRecepion,
+                    ""+LecturaMedidor,
+                    ""+fecha,
+                    ""+Latitud,
+                    ""+Longitud
             );
-            //Aqui debe de abrir nuevamente la lista de documentos pendientes
+            if (cantidadActualizado>0){
+                Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
+                //Se envia datos al servidor
+                SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
+                Date fechaEjecutado = new Date();
+                String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
+                //Generalidades gen=(Generalidades)getApplication();
+                new RegistrarDatosServidor().execute(gen.getCadena()+"webservices/guardarlectura.php?"
+                        +"usuario="+usuario+"&password="+password+"&"
+                        +"DocumentosTrabajoID="+objDetalle.getId()+"&"
+                        +"FechaAsignado="+objDetalle.getFechaAsigando()+"&"
+                        +"FechaEjecutado="+sFechaEjecutado+"&"
+                        +"Estado="+EstadoEntrega+"&"
+                        +"EstadoSeal="+ValorEstado+"&"
+                        +"NombreRecepcionador=&"
+                        +"DNIRecepcionador="+etDni.getText()+"&"
+                        +"Parentesco="+ValorParentesco+"&"
+                        +"LecturaMedidor="+LecturaMedidor+"&"
+                        +"LatitudVisita="+Latitud+"&"
+                        +"LongitudVisita="+Longitud+"&"
+                        +"Observaciones="
+                );
+                //Aqui debe de abrir nuevamente la lista de documentos pendientes
+                Intent tabsActivity=new Intent(getApplicationContext(),TabsActivity.class);
+                startActivity(tabsActivity);
+                finish();
 
+
+            }else{
+                AlertDialog.Builder mensajitoalusurio=new AlertDialog.Builder(this);
+                mensajitoalusurio.setTitle("No se registro");
+                mensajitoalusurio.setMessage("No se registro esta documentacion, intenta nuevamente");
+                mensajitoalusurio.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        //Se hace algo para evitar que pase a la siguiente ventana, para que permanesca aqui hasta que se complete la elctura
+                    }
+                });
+            }
         }else{
+            //Le decimos que no se guardo y que debe de activar el GPS
             AlertDialog.Builder mensajitoalusurio=new AlertDialog.Builder(this);
-            mensajitoalusurio.setTitle("No se registro");
-            mensajitoalusurio.setMessage("No se registro esta documentacion, intenta nuevamente");
-            mensajitoalusurio.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            mensajitoalusurio.setTitle("GPS No Activado");
+            mensajitoalusurio.setMessage("No se Guardo Nada, porque no esta activo el GPS");
+            mensajitoalusurio.setPositiveButton("Activar GPS", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
+                    //miUbicacion();
                     //Se hace algo para evitar que pase a la siguiente ventana, para que permanesca aqui hasta que se complete la elctura
                 }
             });
         }
+
     }
 
     private class RegistrarDatosServidor extends AsyncTask<String,Integer,String>{
@@ -466,6 +496,7 @@ public class DetalleDocumento extends AppCompatActivity {
                     int indice=0;
                     DataBaseHelper db;
                     db= new DataBaseHelper(getApplicationContext());
+                    IdObtenidoServidor=0;
                     while (eventType!= XmlPullParser.END_DOCUMENT){
                         String name=xpp.getName();
                         publishProgress(indice);
@@ -478,8 +509,10 @@ public class DetalleDocumento extends AppCompatActivity {
                             case XmlPullParser.END_TAG:
                                 if (name.equals("cantidad")){//Nombre del tag del archivo xml
                                     respuestaparaaccion=texto;
+                                }else if (name.equals("IdObtenido")){
+                                    IdObtenidoServidor=Integer.parseInt(texto);
                                 }else{
-                                    //aun nada
+                                    //Aun nada
                                 }
                                 break;
                         }
@@ -521,7 +554,14 @@ public class DetalleDocumento extends AppCompatActivity {
             String Estadorespuesta=result;
             DatosListview objDetallito = (DatosListview) getIntent().getExtras().getSerializable("objeto");
             if (Integer.parseInt(Estadorespuesta)>0){
-                Snackbar.make(btnEntrgado, "Guardado Correctamente("+Estadorespuesta+")", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(btnEntrgado, "Guardado Correctamente("+Estadorespuesta+"-"+IdObtenidoServidor+")", Snackbar.LENGTH_SHORT).show();
+                //Envia las fotos a servidor
+                if (IdObtenidoServidor>0){
+
+                    new Enviarfotos().execute(IdObtenidoServidor+"",objDetallito.getId()+"");//CodigodevuelltServidir, CodigoDoc
+                }else {
+                    Toast.makeText(getApplicationContext(),"ID del registro"+IdObtenidoServidor,Toast.LENGTH_SHORT).show();
+                }
                 db.updateDocumento(
                         objDetallito.getId(),
                         "1"//1= Enviado
@@ -581,7 +621,7 @@ public class DetalleDocumento extends AppCompatActivity {
             int response = conn.getResponseCode();
             Log.d("respuesta", "The response is: " + response);
             is = conn.getInputStream();
-            //conn.getInputStream().read();
+                //conn.getInputStream().read();
 
 
             // Convert the InputStream into a string
@@ -617,9 +657,10 @@ public class DetalleDocumento extends AppCompatActivity {
 
             try {
                 cantidadFotos+=1;
-                tomarfoto.loadImageFromFile(ivFoto);
+                tomarfoto.loadImageFromFile(ivFoto);//Estampa la fecha en la FOTO TOMADA
                 //String subirfoto=postArchivo(tomarfoto.getFile().toString());
-                new Enviarfotos().execute(tomarfoto.getFile().toString());
+                //new Enviarfotos().execute(tomarfoto.getFile().toString());
+
                 tvFotosTomadas.setText("Cantidad de Fotos: "+cantidadFotos);
                 //tvFotosTomadas.append(tomarfoto.getFoto().toString()+"\n");
                 //Aqui se registra en la BD Offline
@@ -627,10 +668,12 @@ public class DetalleDocumento extends AppCompatActivity {
                 if(registrarfotoEntregado==true){
                     miUbicacion();
                     RegistrarDocumentoTrabajo(objDetalle,"4");//4=Entregado A cliente
+                    registrarfotoEntregado=false;
                 }
-                if (registrarfotoRezagado=true){
+                if (registrarfotoRezagado==true){
                     miUbicacion();
                     RegistrarDocumentoTrabajo(objDetalle,"3");//3=Rezagado
+                    registrarfotoRezagado=false;
                 }
                 //loadImageFromFile();
             } catch (FileNotFoundException e) {
@@ -644,6 +687,7 @@ public class DetalleDocumento extends AppCompatActivity {
         Date fechaEjecutadoFoto = new Date();
         String sFechaEjecutadoFoto = fechaFormatoFoto.format(fechaEjecutadoFoto);
         long cantidadRegistrado= db.AgregarFoto(
+                ""+objDetalle.getId(),
                 ""+objDetalle.getId(),
                 ""+rutafoto,
                 "",
@@ -690,16 +734,87 @@ public class DetalleDocumento extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             //String respuesta=postArchivo(strings[0]);
-            SubirArchivos sa=new SubirArchivos(strings[0],gen.getCadena()+"webservices/guardarfoto.php");
+            /*SubirArchivos sa=new SubirArchivos(strings[0],gen.getCadena()+"webservices/guardarfoto.php?Idfotovisitascampo="+IdObtenidoServidor,strings[1]);
             String respuesta=sa.postArchivo();
-            return respuesta;
+            */
+            String charset = "UTF-8";
+            String requestURL = gen.getCadena()+"webservices/guardarfoto.php";//?Idfotovisitascampo="+IdObtenidoServidor;//,strings[1];*/
+            Log.e("URL",requestURL);
+            DataBaseHelper db;
+            db= new DataBaseHelper(getApplicationContext());
+            MultipartUtility multipart = null;
+            String response=null;
+            try {
+
+
+                //Primero se recupera el listado de fotografias sel BD offline para enviar.
+                ArrayList<ArrayList> listadodefotos=db.ListarFotosSinIdVisitasCampoOnline(strings[1]+"");
+                    /*Iterator<ArrayList> iterator=listadodefotos.iterator();
+                    while (iterator.hasNext()){
+                        listadodefotos.get(0).get(1);
+
+                    }*/
+                //response=listadodefotos.size()+"-"+strings[1];
+                for (int i = 0; i<listadodefotos.size(); i++){
+                    String CodigoFotos=listadodefotos.get(i).get(0).toString();
+                    String CodigoDocumento=listadodefotos.get(i).get(1).toString();
+                    String RutaFoto=listadodefotos.get(i).get(2).toString();
+                    String EstadoFoto=listadodefotos.get(i).get(3).toString();
+                    String FechaFotoTomada=listadodefotos.get(i).get(4).toString();
+                    //Toast.makeText(getApplicationContext(),"FotosEncontradas: "+listadodefotos.size(),Toast.LENGTH_SHORT).show();
+                    //new Enviarfotos().execute(tomarfoto.getFile().toString(),IdObtenidoServidor+"");
+
+                    //verificaos que tenemos un IDvisitas campo correcto
+                    if (Integer.parseInt(strings[0])>0){
+                        //Actulizamos el campo (visitascampoonline) de la bd offline(codigo interno tabla foto,codigo obtenido del bd Online)
+                        int CantidadFotosModificadas=db.updateFotosModoOnline(Integer.parseInt(CodigoFotos),Integer.parseInt(strings[0]));
+                        if (CantidadFotosModificadas>0){//se copuerba que se hizo el cambio
+                            //Luego se envia las fotos
+                            multipart = new MultipartUtility(requestURL, charset);
+                            multipart.addFormField("Idfotovisitascampo", ""+(strings[0]));
+                            multipart.addFormField("fechatiempo", FechaFotoTomada+"");
+                            //multipart.addFormField("param_name_3", "param_value");
+                            multipart.addFilePart("uploadedfile", new File(RutaFoto));
+                            //response = multipart.finish(); // response from server.
+                            String respuestaServidor=multipart.finish();
+                            if (respuestaServidor.equals("si")){//si el servidor responde "si"
+                                //significa que guardo en la BD online y se subio  la foto. Se registra el cambio en la BD Offline
+                                int CantidadRegistradosOnline=db.updateFotosEstado(Integer.parseInt(CodigoFotos),"1");//1=foto enviado
+                                if ((CantidadRegistradosOnline>0)){
+                                    //Foto online(archivo y BD) y Offline(BD)
+                                    response="3";
+                                }
+                            }else{
+                                int CantidadRegistradosOnline=db.updateFotosEstado(Integer.parseInt(CodigoFotos),"0");//0=Foto no enviado
+                                if ((CantidadRegistradosOnline>0)){
+                                    //Foto NO registradoonline(archivo y BD),
+                                    response="2";
+                                }
+                            }
+                        }else{
+                            response="1";//No se actualizado con los IdVisitaCampo en la BD offline, por tanto no se sube el archivo
+                        }
+                    }else{
+                        response="0";//No se obtuvo el ID del servidor
+                    }
+                }
+
+                //Luego se registra modo Online
+            } catch (IOException e) {
+                response="Error";
+                e.printStackTrace();
+            }
+
+            //return respuesta;
+            return response;
+
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             String subirfoto= s;
-            Toast.makeText(getApplicationContext(),""+subirfoto,Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"resputa: "+subirfoto,Toast.LENGTH_LONG).show();
         }
     }
 }

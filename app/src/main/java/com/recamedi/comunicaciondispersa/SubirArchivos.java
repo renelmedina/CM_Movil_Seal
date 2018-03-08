@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 /**
  * Created by Renel01 on 22/02/2018.
@@ -17,9 +18,20 @@ public class SubirArchivos {
     private String ArchivoSubir;
     private String RutaAplicacion;
 
-    public SubirArchivos(String archivoSubir, String rutaAplicacion) {
+    public String getFechaFotoTomada() {
+        return FechaFotoTomada;
+    }
+
+    public void setFechaFotoTomada(String fechaFotoTomada) {
+        FechaFotoTomada = fechaFotoTomada;
+    }
+
+    private String FechaFotoTomada;
+
+    public SubirArchivos(String archivoSubir, String rutaAplicacion,String fechaFotoTomada) {
         ArchivoSubir = archivoSubir;
         RutaAplicacion = rutaAplicacion;
+        FechaFotoTomada = fechaFotoTomada;
     }
 
     public String getRutaAplicacion() {
@@ -61,13 +73,25 @@ public class SubirArchivos {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Connection", "Keep-Alive");
             conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-
+            String data = "body=" + URLEncoder.encode(FechaFotoTomada,"UTF-8");
             outputStream = new DataOutputStream(conn.getOutputStream());
             outputStream.writeBytes(twoHyphens + boundary + lineEnd);
             outputStream.writeBytes("Content-Disposition: form-data; name=\"uploadedfile\";filename=\""
                     + ArchivoSubir + "\"" + lineEnd);
+            //outputStream.writeBytes("Content-Disposition: form-data; fechatiempo=\""+FechaFotoTomada+"\";"+lineEnd);
+
             outputStream.writeBytes(lineEnd);
 
+
+
+            //outputStream = new DataOutputStream(conn.getOutputStream());
+            outputStream.writeBytes(twoHyphens + boundary + lineEnd);
+            outputStream.writeBytes("Content-Disposition: form-data; name=\"fechatiempo\"" + lineEnd);
+            //outputStream.writeBytes("Content-Disposition: form-data; fechatiempo=\""+FechaFotoTomada+"\";"+lineEnd);
+            outputStream.writeBytes("Content-Type: text/plain; charset=UTF-8" + lineEnd);
+            outputStream.writeBytes(lineEnd);
+            outputStream.writeBytes(FechaFotoTomada+ lineEnd);
+            outputStream.writeBytes(lineEnd);
             bytesAvailable = fileInputStream.available();
             bufferSize = Math.min(bytesAvailable, maxBufferSize);
             buffer = new byte[bufferSize];
@@ -87,6 +111,7 @@ public class SubirArchivos {
         /*String serverResponseCode = "Conexion: "+conn.getResponseCode();
         String serverResponseMessage = conn.getResponseMessage();*/
             Log.d("Enviado: ","Enviado");
+            Log.d("URL",RutaAplicacion);
             DataInputStream dis = new DataInputStream(conn.getInputStream());
             String inputLine;
             String xmlDelServidor="";

@@ -16,7 +16,7 @@ import java.util.List;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     //Base de datos
-    private static final int DATABASE_VER=9;
+    private static final int DATABASE_VER=12;
     private static final String DATABASE_NAME="COMDIS";//comunicacion dispersa
 
     //Tabla DE lecturas
@@ -56,7 +56,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     //Tabla de fotografias
     private static final String TABLE_NAME_FOTOS="Fotos";
     private static final String KEY_TNF_ID="IdFotos";
-    private static final String KEY_TNF_ID_FotosOnnline="IdFotosOnline";
+    private static final String KEY_TNF_ID_VISITACAMPOONLINE="IdVisitaCampoOnline";
     private static final String KEY_TNL_ID_TNF="IdDocumento";
     private static final String KEY_TNF_RUTAFOTO="RutaFoto";
     private static final String KEY_TNF_ESTADOFOTO="EstadoSubidaFoto";
@@ -109,7 +109,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         CREATE_TABLE="CREATE TABLE IF NOT EXISTS "+TABLE_NAME_FOTOS+" ("
                 +KEY_TNF_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"
                 +KEY_TNL_ID_TNF+" TEXT,"
-                +KEY_TNF_ID_FotosOnnline+" TEXT,"
+                +KEY_TNF_ID_VISITACAMPOONLINE+" TEXT,"
                 +KEY_TNF_RUTAFOTO+" TEXT,"
                 +KEY_TNF_ESTADOFOTO+" TEXT,"
                 +KEY_TNF_FECHA+" TEXT"
@@ -141,10 +141,106 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             return false;
         }
     }
-    public long AgregarFoto(String CodDocumento,String RutaFotoCelular,String EstadoFoto, String FechaFoto){
+    public int updateFotosModoOnline(int codFotooffline,int CodigoVisitaCampoOnline){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put(KEY_TNF_ID_VISITACAMPOONLINE,CodigoVisitaCampoOnline);
+        /*return db.update(TABLE_NAME,
+                values,KEY_Codigos_codigodoc+" =?",new String[]{codDocumento});*/
+        /*return db.update(TABLE_NAME,
+                values,KEY_Codigos_codigodoc+" ='"+codDocumento+"'",null);*/
+        return db.update(TABLE_NAME_FOTOS,values,KEY_TNF_ID+" ="+codFotooffline,null);
+        //db.update("sdfsd","sdfsdfsd","asdfasdfasd");
+
+    }
+    public int updateFotosEstado(int codFotooffline,String EstadoEntrega){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put(KEY_TNF_ESTADOFOTO,EstadoEntrega);
+        /*return db.update(TABLE_NAME,
+                values,KEY_Codigos_codigodoc+" =?",new String[]{codDocumento});*/
+        /*return db.update(TABLE_NAME,
+                values,KEY_Codigos_codigodoc+" ='"+codDocumento+"'",null);*/
+        return db.update(TABLE_NAME_FOTOS,values,KEY_TNF_ID+" ="+codFotooffline,null);
+        //db.update("sdfsd","sdfsdfsd","asdfasdfasd");
+
+    }
+    public ArrayList<ArrayList> ListarFotosSinIdVisitasCampoOnline(String IdDocumento){
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.query(TABLE_NAME_FOTOS,new String[]{
+                KEY_TNF_ID,
+                KEY_TNL_ID_TNF,//Codigo de documento
+                KEY_TNF_RUTAFOTO,
+                KEY_TNF_ESTADOFOTO,
+                KEY_TNF_FECHA
+        },KEY_TNL_ID_TNF+"=? and "+KEY_TNF_ESTADOFOTO+"!=?",new String[]{String.valueOf(IdDocumento),"1"},null,null,null,null);
+        ArrayList<ArrayList> lstFotos=new ArrayList<>();
+
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                ArrayList<String> datosListview=new ArrayList<String>();
+                datosListview.add(cursor.getString(0));
+                datosListview.add(cursor.getString(1));
+                datosListview.add(cursor.getString(2));
+                datosListview.add(cursor.getString(3));
+                datosListview.add(cursor.getString(4));
+
+                lstFotos.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstFotos;
+    }
+    public ArrayList<ArrayList> ListarDocHechosOffLine(){
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.query(TABLE_NAME,new String[]{
+                KEY_ID,
+                KEY_Codigos_codigodoc,//Codigo de documento
+                KEY_fechaasig,//fecha de asignacion
+                KEY_FechaVisita,
+                KEY_EstadoEntrega,
+                KEY_EstadoFirma,
+                KEY_DniRecepcion,
+                KEY_Parentesco,
+                KEY_LecturaMedidor,
+                KEY_VisitaLatitud,
+                KEY_VisitaLongitud,
+                KEY_EstadoEnvio
+        },KEY_EstadoEnvio+"<=? and "+KEY_EstadoEntrega+">?",new String[]{"0","2"},null,null,null,null);
+        //String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" <1";//0, doc sin enviar al servidor
+
+        ArrayList<ArrayList> lstDocEntregadosOffline=new ArrayList<>();
+
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                ArrayList<String> datosListview=new ArrayList<String>();
+                datosListview.add(cursor.getString(0));
+                datosListview.add(cursor.getString(1));
+                datosListview.add(cursor.getString(2));
+                datosListview.add(cursor.getString(3));
+                datosListview.add(cursor.getString(4));
+                datosListview.add(cursor.getString(5));
+                datosListview.add(cursor.getString(6));
+                datosListview.add(cursor.getString(7));
+                datosListview.add(cursor.getString(8));
+                datosListview.add(cursor.getString(9));
+                datosListview.add(cursor.getString(10));
+                datosListview.add(cursor.getString(11));
+
+
+                lstDocEntregadosOffline.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstDocEntregadosOffline;
+    }
+    public long AgregarFoto(String CodDocumento,String IdVisitaCampoOnline,String RutaFotoCelular,String EstadoFoto, String FechaFoto){
         SQLiteDatabase db=this.getWritableDatabase();
         ContentValues values= new ContentValues();
         values.put(KEY_TNL_ID_TNF,CodDocumento);
+        values.put(KEY_TNF_ID_VISITACAMPOONLINE,IdVisitaCampoOnline);
         values.put(KEY_TNF_RUTAFOTO,RutaFotoCelular);
         values.put(KEY_TNF_ESTADOFOTO,EstadoFoto);
         values.put(KEY_TNF_FECHA,FechaFoto);
@@ -354,6 +450,165 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                         +14+" TEXT,"
                         +15+" TEXT,"
                         +KEY_FechaVisita+" TEXT"*/
+                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
+                textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
+                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
+//                if (cursor.getString(12)==null){
+//                    textodetalle+="Estado: Sin visita";
+//                }else{
+//                    textodetalle+="Estado: "+cursor.getString(12);
+//                }
+                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                textodetalle+="Estado Envio: "+cursor.getString(20);
+
+                datosListview.setDetalle(textodetalle);
+                datosListview.setImagen(R.drawable.arequipaaccsac);
+
+                lstDocumentos.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstDocumentos;
+    }
+    public List<DatosListview> getAllDocumentosPendientes(){
+        List<DatosListview> lstDocumentos=new ArrayList<>();
+        String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE "+KEY_EstadoEntrega+" is null or estadito < 3";
+        SQLiteDatabase db=this.getWritableDatabase();
+        Cursor cursor=db.rawQuery(selectquery,null);
+        String textodetalle;
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                DatosListview datosListview=new DatosListview();
+                datosListview.setId(cursor.getInt(1));//Codigo documento
+                datosListview.setNroSuministro(cursor.getString(2));
+                datosListview.setCodTipoCod(cursor.getString(3));
+                datosListview.setNombreTipoDoc(cursor.getString(4));
+                datosListview.setNroDocumentoSeal(cursor.getString(5));
+                datosListview.setCodigoBarra(cursor.getString(6));
+                datosListview.setLatitud(cursor.getString(7));
+                datosListview.setLongitud(cursor.getString(8));
+                datosListview.setFechaAsigando(cursor.getString(9));
+                datosListview.setClienteDNI(cursor.getString(10));
+                datosListview.setClienteNombre(cursor.getString(11));
+
+                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                textodetalle="Suministro: "+cursor.getString(2)+ "\n";
+                textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
+                textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
+                textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
+                textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
+
+
+                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
+                textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
+                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
+//                if (cursor.getString(12)==null){
+//                    textodetalle+="Estado: Sin visita";
+//                }else{
+//                    textodetalle+="Estado: "+cursor.getString(12);
+//                }
+                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                textodetalle+="Estado Envio: "+cursor.getString(20);
+
+                datosListview.setDetalle(textodetalle);
+                datosListview.setImagen(R.drawable.arequipaaccsac);
+
+                lstDocumentos.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstDocumentos;
+    }
+    public List<DatosListview> getAllDocumentosHechos(){
+        List<DatosListview> lstDocumentos=new ArrayList<>();
+        String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" <1";//0, doc sin enviar al servidor
+        SQLiteDatabase db=this.getWritableDatabase();
+        Cursor cursor=db.rawQuery(selectquery,null);
+        String textodetalle;
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                DatosListview datosListview=new DatosListview();
+                datosListview.setId(cursor.getInt(1));//Codigo documento
+                datosListview.setNroSuministro(cursor.getString(2));
+                datosListview.setCodTipoCod(cursor.getString(3));
+                datosListview.setNombreTipoDoc(cursor.getString(4));
+                datosListview.setNroDocumentoSeal(cursor.getString(5));
+                datosListview.setCodigoBarra(cursor.getString(6));
+                datosListview.setLatitud(cursor.getString(7));
+                datosListview.setLongitud(cursor.getString(8));
+                datosListview.setFechaAsigando(cursor.getString(9));
+                datosListview.setClienteDNI(cursor.getString(10));
+                datosListview.setClienteNombre(cursor.getString(11));
+
+                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                textodetalle="Suministro: "+cursor.getString(2)+ "\n";
+                textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
+                textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
+                textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
+                textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
+
+
+                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
+                textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
+                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
+//                if (cursor.getString(12)==null){
+//                    textodetalle+="Estado: Sin visita";
+//                }else{
+//                    textodetalle+="Estado: "+cursor.getString(12);
+//                }
+                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                textodetalle+="Estado Envio: "+cursor.getString(20);
+
+                datosListview.setDetalle(textodetalle);
+                datosListview.setImagen(R.drawable.arequipaaccsac);
+
+                lstDocumentos.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstDocumentos;
+    }
+    public List<DatosListview> getAllDocumentosEnviados(){
+        List<DatosListview> lstDocumentos=new ArrayList<>();
+        String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" >0";//1=Doc. enviado servidor
+        SQLiteDatabase db=this.getWritableDatabase();
+        Cursor cursor=db.rawQuery(selectquery,null);
+        String textodetalle;
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                DatosListview datosListview=new DatosListview();
+                datosListview.setId(cursor.getInt(1));//Codigo documento
+                datosListview.setNroSuministro(cursor.getString(2));
+                datosListview.setCodTipoCod(cursor.getString(3));
+                datosListview.setNombreTipoDoc(cursor.getString(4));
+                datosListview.setNroDocumentoSeal(cursor.getString(5));
+                datosListview.setCodigoBarra(cursor.getString(6));
+                datosListview.setLatitud(cursor.getString(7));
+                datosListview.setLongitud(cursor.getString(8));
+                datosListview.setFechaAsigando(cursor.getString(9));
+                datosListview.setClienteDNI(cursor.getString(10));
+                datosListview.setClienteNombre(cursor.getString(11));
+
+                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                textodetalle="Suministro: "+cursor.getString(2)+ "\n";
+                textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
+                textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
+                textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
+                textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
+
+
                 textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
                 textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
                 textodetalle+="Parentesco: "+cursor.getString(13)+"\n";

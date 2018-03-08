@@ -28,4 +28,19 @@
         <item>40. Vecino(a)</item>
         <item>99. No informado</item>
     </string-array>
+    <string name="title_activity_menu_lateral">MenuLateralActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="fPendientes">Pendientes</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_tabs">TabsActivity</string>
+    <string name="tab_text_1">Pendientes</string>
+    <string name="tab_text_2">Entregados</string>
+    <string name="tab_text_3">Enviados</string>
+    <string name="section_format">Hello World from section: %1$d</string>
 </resources>
