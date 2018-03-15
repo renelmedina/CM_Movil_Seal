@@ -495,27 +495,27 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 datosListview.setClienteDNI(cursor.getString(10));
                 datosListview.setClienteNombre(cursor.getString(11));
 
-                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                datosListview.setTitulo(Contador + "("+cursor.getInt(1)+").- "+cursor.getString(5));
                 textodetalle="Suministro: "+cursor.getString(2)+ "\n";
                 textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
                 textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
                 textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
-                textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
+                //textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
 
 
-                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
-                textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
-                textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
-                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
-                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
-                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
+                //textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                //textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
+                //textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
+                //textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                //textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                //textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
 //                if (cursor.getString(12)==null){
 //                    textodetalle+="Estado: Sin visita";
 //                }else{
 //                    textodetalle+="Estado: "+cursor.getString(12);
 //                }
-                textodetalle+="Estado: "+cursor.getString(12)+"\n";
-                textodetalle+="Estado Envio: "+cursor.getString(20);
+                //textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                //textodetalle+="Estado Envio: "+cursor.getString(20);
 
                 datosListview.setDetalle(textodetalle);
                 datosListview.setImagen(R.drawable.arequipaaccsac);
@@ -548,15 +548,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 datosListview.setClienteDNI(cursor.getString(10));
                 datosListview.setClienteNombre(cursor.getString(11));
 
-                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                datosListview.setTitulo(Contador + "("+cursor.getInt(1)+").- "+cursor.getString(5));
                 textodetalle="Suministro: "+cursor.getString(2)+ "\n";
                 textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
                 textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
-                textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
+                //textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
                 textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
 
 
-                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                //textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
                 textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
                 textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
                 textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
@@ -567,7 +567,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 //                }else{
 //                    textodetalle+="Estado: "+cursor.getString(12);
 //                }
-                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                //textodetalle+="Estado: "+cursor.getString(12)+"\n";
                 textodetalle+="Estado Envio: "+cursor.getString(20);
 
                 datosListview.setDetalle(textodetalle);
@@ -580,7 +580,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
     public List<DatosListview> getAllDocumentosEnviados(){
         List<DatosListview> lstDocumentos=new ArrayList<>();
-        String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" >0";//1=Doc. enviado servidor
+        String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" >0 order by "+KEY_ID+ " desc";//1=Doc. enviado servidor
         SQLiteDatabase db=this.getWritableDatabase();
         Cursor cursor=db.rawQuery(selectquery,null);
         String textodetalle;
@@ -601,27 +601,28 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 datosListview.setClienteDNI(cursor.getString(10));
                 datosListview.setClienteNombre(cursor.getString(11));
 
-                datosListview.setTitulo(Contador + ".- "+cursor.getString(5));
+                datosListview.setTitulo(Contador + "("+cursor.getInt(1)+").- "+cursor.getString(5));
                 textodetalle="Suministro: "+cursor.getString(2)+ "\n";
                 textodetalle+="Tipo Doc: "+cursor.getString(4)+ "\n";
                 textodetalle+="Cod Barra: "+cursor.getString(6)+ "\n";
-                textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
+                //textodetalle+="Posicion: "+cursor.getString(7)+", "+cursor.getString(8)+ "\n";
                 textodetalle+="Posicion Visita: "+cursor.getString(18)+", "+cursor.getString(19)+ "\n";
 
 
-                textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
-                textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
-                textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
-                textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
-                textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
-                textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
+                //textodetalle+="Nombre Cliente: "+cursor.getString(11)+"\n";
+                //textodetalle+="Estado Firma: "+cursor.getString(12)+"\n";
+                //textodetalle+="Parentesco: "+cursor.getString(13)+"\n";
+                //textodetalle+="DNI Recepcion: "+cursor.getString(15)+"\n";
+                //textodetalle+="Lectura Medidor: "+cursor.getString(16)+"\n";
+                //textodetalle+="FechaVisitada: "+cursor.getString(17)+"\n";
 //                if (cursor.getString(12)==null){
 //                    textodetalle+="Estado: Sin visita";
 //                }else{
 //                    textodetalle+="Estado: "+cursor.getString(12);
 //                }
-                textodetalle+="Estado: "+cursor.getString(12)+"\n";
+                //textodetalle+="Estado: "+cursor.getString(12)+"\n";
                 textodetalle+="Estado Envio: "+cursor.getString(20);
+
 
                 datosListview.setDetalle(textodetalle);
                 datosListview.setImagen(R.drawable.arequipaaccsac);

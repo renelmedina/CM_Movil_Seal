@@ -414,7 +414,7 @@ public class DetalleDocumento extends AppCompatActivity {
             if (cantidadActualizado>0){
                 Toast.makeText(getApplicationContext(),"Se guardo el archivo correctamente",Toast.LENGTH_SHORT).show();
                 //Se envia datos al servidor
-                SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.getDefault());
+                SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
                 Date fechaEjecutado = new Date();
                 String sFechaEjecutado = fechaFormato.format(fechaEjecutado);
                 //Generalidades gen=(Generalidades)getApplication();
@@ -475,6 +475,7 @@ public class DetalleDocumento extends AppCompatActivity {
         }
         @Override
         protected String doInBackground(String... urls) {
+
             try {
                 publishProgress(0);
                 String TextoRecuperadoDeServidor=downloadUrl(urls[0]);

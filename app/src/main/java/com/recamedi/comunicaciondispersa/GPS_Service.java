@@ -1,5 +1,6 @@
 package com.recamedi.comunicaciondispersa;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.app.Service;
@@ -8,16 +9,20 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
@@ -203,4 +208,5 @@ public class GPS_Service extends Service {
 
         }
     }
+
 }
