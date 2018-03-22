@@ -79,6 +79,9 @@ public class LoginClase extends AppCompatActivity {
     Generalidades gen;//= (Generalidades)this.getApplication();
 
     String CodigoPersonal="";
+
+
+    int ModoInicial;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,7 +142,9 @@ public class LoginClase extends AppCompatActivity {
         editor.putBoolean("preferenciasGuardadas", true);
         editor.putString("usuario", etUsuario.getText().toString());
         editor.putString("password", etPassword.getText().toString());
-        editor.putString("codper", CodigoPersonal);
+        if (!CodigoPersonal.isEmpty()){
+            editor.putString("codper", CodigoPersonal);
+        }
         editor.commit();
         Toast.makeText(this, "Guardando preferencias", Toast.LENGTH_SHORT).show();
     }
@@ -147,19 +152,19 @@ public class LoginClase extends AppCompatActivity {
     //cargar configuración aplicación Android usando SharedPreferences
         public void cargarPreferencias(){
         SharedPreferences prefs = getSharedPreferences("preferenciasMiApp", Context.MODE_PRIVATE);
-        this.prUsuario = prefs.getString("usuario", "valor por defecto");
-        this.prPassword = prefs.getString("password", "valor por defecto");
+        this.prUsuario = prefs.getString("usuario", "");
+        this.prPassword = prefs.getString("password", "");
         this.preferenciasGuardadas = prefs.getBoolean("preferenciasGuardadas", true);
 
         etUsuario.setText(this.prUsuario);
         etPassword.setText(this.prPassword);
 
-
         SharedPreferences prefsGen = getSharedPreferences("pConfiguracionesApp", Context.MODE_PRIVATE);
-        gen.setCadena(prefsGen.getString("rutawebapp","http://www.recamedi.com/"));
-        gen.setTiempoLectura(prefsGen.getInt("TiempoLectura",3000));
-        gen.setTiempoConexion(prefsGen.getInt("TiempoConexion",3000));
-        //chkGuardasCredenciales.setChecked(true);
+        gen.setCadena(prefsGen.getString("rutawebapp","http://accsac.com/sistemas/seal/comunicaciondispersa/"));
+        gen.setTiempoLectura(prefsGen.getInt("TiempoLectura",10000));
+        gen.setTiempoConexion(prefsGen.getInt("TiempoConexion",10000));
+        ModoInicial=prefsGen.getInt("InicioModo",1);
+            //chkGuardasCredenciales.setChecked(true);
 
 
     }
@@ -190,9 +195,22 @@ public class LoginClase extends AppCompatActivity {
         acMainActivity.putExtra("acLoginPassword",etPassword.getText().toString());*/
 
         Intent actprincipal=new Intent(getApplicationContext(),MenuLateralActivity.class);
+        Intent actVolanteo=new Intent(getApplicationContext(),VisitaCampoMarcador.class);
+
         //startActivity(actprincipal);
         if (AccesoCorrecto){
-            startActivity(actprincipal);
+            switch (ModoInicial){
+                case 1:
+                    startActivity(actprincipal);
+                    break;
+                case 2:
+                    startActivity(actVolanteo);
+                    break;
+                default:
+                    startActivity(actprincipal);
+            }
+            Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+            startService(i);
             finish();
         }else {
             new ConsultarDatos().execute(gen.getCadena()+"webservices/logincelulares.php?usuario="+etUsuario.getText()+"&password="+etPassword.getText());
@@ -331,14 +349,20 @@ public class LoginClase extends AppCompatActivity {
             String Estadorespuesta=LeerXml(null,""+xmlTexto);
             String textomensaje;
             //Intent actprincipal=new Intent(getApplicationContext(),MenuLateralActivity.class);
-
-            Intent acMainActivity=new Intent(getApplicationContext(),MenuLateralActivity.class);
+            Intent acMainActivity;//=new Intent(getApplicationContext(),MenuLateralActivity.class);
+            if (ModoInicial==2){
+                acMainActivity=new Intent(getApplicationContext(),VisitaCampoMarcador.class);
+            }else {
+                acMainActivity=new Intent(getApplicationContext(),MenuLateralActivity.class);
+            }
             acMainActivity.putExtra("acLoginUser",etUsuario.getText().toString());
             acMainActivity.putExtra("acLoginPassword",etPassword.getText().toString());
             switch (Estadorespuesta){
                 case "-3":
                     textomensaje="Parameros Incorrectos !!!. Intentando modo Offline";
                     if (AccesoCorrecto){
+                        Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+                        startService(i);
                         startActivity(acMainActivity);
                         finish();
                     }else {
@@ -350,6 +374,8 @@ public class LoginClase extends AppCompatActivity {
                     textomensaje="Error de Lectura de Datos de Session. Intentando modo Offline";
                     tvEstadoSession.setText("Error de Lectura de Datos de Session. Intentando modo Offline");
                     if (AccesoCorrecto){
+                        Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+                        startService(i);
                         startActivity(acMainActivity);
                         finish();
                     }else {
@@ -360,6 +386,8 @@ public class LoginClase extends AppCompatActivity {
                 case "-1":
                     textomensaje="Error de conexion. Error En formato XML. Intentando modo Offline";
                     if (AccesoCorrecto){
+                        Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+                        startService(i);
                         startActivity(acMainActivity);
                         finish();
                     }else {
@@ -380,6 +408,8 @@ public class LoginClase extends AppCompatActivity {
                         CodigoPersonal=DatosSessionOnline.get(3);
                         guardarPreferencias();
                     }
+                    Intent i = new Intent(getApplicationContext(),GPS_Service.class);
+                    startService(i);
                     startActivity(acMainActivity);
                     finish();
                     break;

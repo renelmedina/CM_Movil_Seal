@@ -15,6 +15,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -91,6 +93,7 @@ public class GPS_Service extends Service {
                 sendBroadcast(i);
 
                 //Toast.makeText(getApplicationContext(),"RUTA: "+RutaApp,Toast.LENGTH_SHORT).show();
+                Log.e("CODIGO PERSONAL",CodigoPersonal+"-");
 
 
                 SimpleDateFormat fechaFormato = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
@@ -104,26 +107,34 @@ public class GPS_Service extends Service {
                         ""+CodigoPersonal
                 );
                 if (insertados>0){
-                    Toast.makeText(getApplicationContext(),"LAT: +"+location.getLatitude()+ ", LONG: "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),"LAT: +"+location.getLatitude()+ ", LONG: "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                    /*String DireccionUbicacion="";
+                    try{
+                        Geocoder geocoder=new Geocoder(getApplicationContext(), Locale.getDefault());
+                        List<Address> list=geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+                        if (!list.isEmpty()){
+                            Address direccion=list.get(0);
+                            DireccionUbicacion=direccion.getAddressLine(0);
+                        }
+                    }catch (IOException e){
+                        DireccionUbicacion=""+e;
+                    }*/
+                    new RegistrarRutaServidor().execute(""+CodigoPersonal,location.getLatitude()+"",location.getLongitude()+"","",sFechaEjecutado);
                 }else {
-                    Toast.makeText(getApplicationContext(),"NADA("+insertados+")----LAT: +"+location.getLatitude()+ ", LONG: "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),"NADA("+insertados+")----LAT: +"+location.getLatitude()+ ", LONG: "+location.getLongitude(),Toast.LENGTH_SHORT).show();
 
                 }
-                String DireccionUbicacion="";
-                try{
-                    Geocoder geocoder=new Geocoder(getApplicationContext(), Locale.getDefault());
-                    List<Address> list=geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-                    if (!list.isEmpty()){
-                        Address direccion=list.get(0);
-                        DireccionUbicacion=direccion.getAddressLine(0);
-                    }
-                }catch (IOException e){
-                    DireccionUbicacion=""+e;
-                }
-                new RegistrarRutaServidor().execute(""+CodigoPersonal,location.getLatitude()+"",location.getLongitude()+"",DireccionUbicacion+"",sFechaEjecutado);
+
                 //Generalidades gen=(Generalidades)getApplication();
                 //Aqui tengo que poner la base de datos para registrar las incidencias
 
+
+                /*if(isOnlineNet()){
+                    Log.e("ESTADO RED",Boolean.toString(isOnlineNet()));
+                }else{
+                    Log.e("ESTADO RED",Boolean.toString(isOnlineNet()));
+
+                }*/
 
 
             }
@@ -162,11 +173,19 @@ public class GPS_Service extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+
+        return START_STICKY;
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (locationManager!=null){
             locationManager.removeUpdates(listener);
         }
+        //return START_STICKY;
     }
     private class RegistrarRutaServidor extends AsyncTask<String,Integer,String> {
 
@@ -181,11 +200,22 @@ public class GPS_Service extends Service {
             MultipartUtility multipart = null;
             String response=null;
             try {
+                String DireccionUbicacion="";
+                    try{
+                        Geocoder geocoder=new Geocoder(getApplicationContext(), Locale.getDefault());
+                        List<Address> list=geocoder.getFromLocation(Double.parseDouble(strings[1]),Double.parseDouble(strings[2]),1);
+                        if (!list.isEmpty()){
+                            Address direccion=list.get(0);
+                            DireccionUbicacion=direccion.getAddressLine(0);
+                        }
+                    }catch (IOException e){
+                        DireccionUbicacion=""+e;
+                    }
                 multipart = new MultipartUtility(requestURL, charset);
                 multipart.addFormField("idpersonal", ""+(strings[0]));
                 multipart.addFormField("latitud", ""+(strings[1]));
                 multipart.addFormField("longitud", ""+(strings[2]));
-                multipart.addFormField("direccion", ""+(strings[3]));
+                multipart.addFormField("direccion", ""+DireccionUbicacion);
                 multipart.addFormField("fechahora", ""+(strings[4]));
                 //multipart.addFilePart("uploadedfile", new File(RutaFoto));
                 //response = multipart.finish(); // response from server.
@@ -193,7 +223,9 @@ public class GPS_Service extends Service {
                 response=respuestaServidor;
                 //Luego se registra modo Online
             } catch (IOException e) {
-                response="Error_url:"+requestURL;
+                //response="Error_url:"+requestURL;
+                response="Sin Conexion a internet";
+
                 e.printStackTrace();
             }
 
@@ -204,8 +236,9 @@ public class GPS_Service extends Service {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Toast.makeText(getApplicationContext(),"Servidor respuesta(+"+s+ ")",Toast.LENGTH_SHORT).show();
-
+            if (!(Integer.parseInt(s)>0)){
+                Toast.makeText(getApplicationContext(),"Servidor respuesta(+"+s+ ")",Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

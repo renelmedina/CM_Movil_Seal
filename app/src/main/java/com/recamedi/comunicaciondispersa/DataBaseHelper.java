@@ -16,7 +16,7 @@ import java.util.List;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     //Base de datos
-    private static final int DATABASE_VER=12;
+    private static final int DATABASE_VER=16;
     private static final String DATABASE_NAME="COMDIS";//comunicacion dispersa
 
     //Tabla DE lecturas
@@ -58,6 +58,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String KEY_TNF_ID="IdFotos";
     private static final String KEY_TNF_ID_VISITACAMPOONLINE="IdVisitaCampoOnline";
     private static final String KEY_TNL_ID_TNF="IdDocumento";
+    private static final String KEY_TNL_NROSUMINISTRO="NroSuministro";
     private static final String KEY_TNF_RUTAFOTO="RutaFoto";
     private static final String KEY_TNF_ESTADOFOTO="EstadoSubidaFoto";
     private static final String KEY_TNF_FECHA="FechaFoto";
@@ -109,6 +110,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         CREATE_TABLE="CREATE TABLE IF NOT EXISTS "+TABLE_NAME_FOTOS+" ("
                 +KEY_TNF_ID+" INTEGER PRIMARY KEY AUTOINCREMENT,"
                 +KEY_TNL_ID_TNF+" TEXT,"
+                +KEY_TNL_NROSUMINISTRO+" TEXT,"
                 +KEY_TNF_ID_VISITACAMPOONLINE+" TEXT,"
                 +KEY_TNF_RUTAFOTO+" TEXT,"
                 +KEY_TNF_ESTADOFOTO+" TEXT,"
@@ -192,6 +194,76 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         }
         return lstFotos;
     }
+
+    /* Esta funcion se utiliza solo en al activiti de VisitCampoMarcador
+    * Cuando se le entrego al repartidor el paquete pero no fue asignado en el sistema, todo se basa solo en nro de suministro
+    * */
+    public ArrayList<ArrayList> ListarFotosSinIdVisitasCampoOnlineXSuministro(String NroSuministro){
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.query(TABLE_NAME_FOTOS,new String[]{
+                KEY_TNF_ID,
+                KEY_TNL_ID_TNF,//Codigo de documento
+                KEY_TNL_NROSUMINISTRO,//Numero de suministro
+                KEY_TNF_RUTAFOTO,
+                KEY_TNF_ESTADOFOTO,
+                KEY_TNF_FECHA
+        },KEY_TNL_NROSUMINISTRO+"=? and "+KEY_TNF_ESTADOFOTO+"!=?",new String[]{String.valueOf(NroSuministro),"1"},null,null,null,null);
+        ArrayList<ArrayList> lstFotos=new ArrayList<>();
+
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                ArrayList<String> datosListview=new ArrayList<String>();
+                datosListview.add(cursor.getString(0));
+                datosListview.add(cursor.getString(1));
+                datosListview.add(cursor.getString(2));
+                datosListview.add(cursor.getString(3));
+                datosListview.add(cursor.getString(4));
+                datosListview.add(cursor.getString(5));
+                lstFotos.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstFotos;
+    }
+    public ArrayList<ArrayList> ListarDocHechosOffLineXSuministro(){
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.query(TABLE_NAME,new String[]{
+                KEY_ID,//0
+                KEY_Codigos_nrosuministro,//1
+                KEY_FechaVisita,//2
+                KEY_EstadoEntrega,//3
+                KEY_VisitaLatitud,//4
+                KEY_VisitaLongitud,//5
+                KEY_EstadoEnvio//6
+        },"("+KEY_EstadoEnvio+"<=? and "+KEY_EstadoEntrega+">?) or ("+KEY_EstadoEnvio+" is null and "+KEY_Codigos_codigodoc+" is null)",new String[]{"0","2"},null,null,null,null);
+        //String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" <1";//0, doc sin enviar al servidor
+
+        ArrayList<ArrayList> lstDocEntregadosOffline=new ArrayList<>();
+
+        int Contador=0;
+        if (cursor.moveToFirst()){
+            do{
+                Contador+=1;
+                ArrayList<String> datosListview=new ArrayList<String>();
+                datosListview.add(cursor.getString(0));
+                datosListview.add(cursor.getString(1));
+                datosListview.add(cursor.getString(2));
+                datosListview.add(cursor.getString(3));
+                datosListview.add(cursor.getString(4));
+                datosListview.add(cursor.getString(5));
+                datosListview.add(cursor.getString(6));
+                lstDocEntregadosOffline.add(datosListview);
+            }while (cursor.moveToNext());
+        }
+        return lstDocEntregadosOffline;
+    }
+    public void updateDocumentoXSuministro(int codInternoOffline, String estadoEnvio){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put(KEY_EstadoEnvio,estadoEnvio);
+        db.update(TABLE_NAME,values,KEY_ID+" ="+codInternoOffline,null);
+    }
     public ArrayList<ArrayList> ListarDocHechosOffLine(){
         SQLiteDatabase db=this.getReadableDatabase();
         Cursor cursor=db.query(TABLE_NAME,new String[]{
@@ -206,8 +278,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 KEY_LecturaMedidor,
                 KEY_VisitaLatitud,
                 KEY_VisitaLongitud,
-                KEY_EstadoEnvio
-        },KEY_EstadoEnvio+"<=? and "+KEY_EstadoEntrega+">?",new String[]{"0","2"},null,null,null,null);
+                KEY_EstadoEnvio,
+                KEY_Codigos_nrosuministro
+        },KEY_EstadoEnvio+"<=? and "+KEY_EstadoEntrega+">? and "+KEY_Codigos_codigodoc+" is not null",new String[]{"0","2"},null,null,null,null);
+
+        //},"("+KEY_EstadoEnvio+"<=? and "+KEY_EstadoEntrega+">?) or ("+KEY_EstadoEnvio+" is null and "+KEY_EstadoEntrega+" is null)",new String[]{"0","2"},null,null,null,null);
         //String selectquery= "SELECT *, cast("+KEY_EstadoEntrega+" as int) as estadito FROM "+TABLE_NAME+" WHERE estadito > 2 and "+KEY_EstadoEnvio+" <1";//0, doc sin enviar al servidor
 
         ArrayList<ArrayList> lstDocEntregadosOffline=new ArrayList<>();
@@ -249,6 +324,21 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.close();
         return cantidadFotosRegistrado;
     }
+    /* Esta funcion se utiliza solo en al activiti de VisitCampoMarcador
+    * Cuando se le entrego al repartidor el paquete pero no fue asignado en el sistema, todo se basa solo en nro de suministro
+    * */
+    public long AgregarFoto(String NroSuministro,String RutaFotoCelular,String EstadoFoto, String FechaFoto){
+        SQLiteDatabase db=this.getWritableDatabase();
+        ContentValues values= new ContentValues();
+        values.put(KEY_TNL_NROSUMINISTRO,NroSuministro);
+        values.put(KEY_TNF_RUTAFOTO,RutaFotoCelular);
+        values.put(KEY_TNF_ESTADOFOTO,EstadoFoto);
+        values.put(KEY_TNF_FECHA,FechaFoto);
+        long cantidadFotosRegistrado= db.insert(TABLE_NAME_FOTOS,null,values);
+
+        db.close();
+        return cantidadFotosRegistrado;
+    }
     public void AgregarUsuario(String CodigoPersonal, String UsuarioPersonal, String PasswordPersonal, String NombrePersonal, String FechaAcceso){
         SQLiteDatabase db=this.getWritableDatabase();
         ContentValues values= new ContentValues();
@@ -278,22 +368,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_NAME,null,values);
         db.close();
     }
-    public void addDocumento(String Iddocumento){
+    public long addDocumentoVisitaCampo(String NroSuministro,String EstadoEntrega, String FechaEjecutado, String Latitud, String Longitud){
         SQLiteDatabase db=this.getWritableDatabase();
         ContentValues values= new ContentValues();
-        values.put(KEY_Codigos_codigodoc,Iddocumento);
-        values.put(KEY_Codigos_nrosuministro,Iddocumento);
-        values.put(KEY_tipodoc_codigo,Iddocumento);
-        values.put(KEY_tipodoc_nombretipodoc,Iddocumento);
-        values.put(KEY_codigobarra,Iddocumento);
-        values.put(KEY_coordenadas_lat,Iddocumento);
-        values.put(KEY_coordenadas_long,Iddocumento);
-        values.put(KEY_fechaasig,Iddocumento);
-        values.put(KEY_cliente_dni,Iddocumento);
-        values.put(KEY_cliente_nombrecliente,Iddocumento);
+        values.put(KEY_Codigos_nrosuministro,NroSuministro);
+        values.put(KEY_FechaVisita,FechaEjecutado);
+        values.put(KEY_VisitaLatitud,Latitud);
+        values.put(KEY_VisitaLongitud,Longitud);
+        values.put(KEY_EstadoEntrega,EstadoEntrega);
 
-        db.insert(TABLE_NAME,null,values);
+        long cantidad=db.insert(TABLE_NAME,null,values);
         db.close();
+        return cantidad;
     }
     public int updateDocumento(int codDocumento,String EstadoEntrega, String EstadoFirma, String Parentesco,String DniRecepcion, String LecturaMedidor,String FechaVisita, String LatitudVisita, String LongitudVisita){
         SQLiteDatabase db=this.getWritableDatabase();

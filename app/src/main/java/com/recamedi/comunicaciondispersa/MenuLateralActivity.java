@@ -170,7 +170,10 @@ public class MenuLateralActivity extends AppCompatActivity
             startActivity(documentostabs);
             //fm1.beginTransaction().replace(R.id.escenarioprincipal,new FPendientes()).commit();
 
-        //} else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_sinasignar) {
+            Intent documentostabs=new Intent(getApplicationContext(),VisitaCampoMarcador.class);
+            startActivity(documentostabs);
+
 
         //} else if (id == R.id.nav_slideshow) {
 

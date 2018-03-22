@@ -118,35 +118,24 @@ public class Fotografias extends ActivityCompat {
         BitmapFactory.decodeFile(foto, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
-
         // Determine how much to scale down the image
         int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
         bmOptions.inSampleSize = calculateInSampleSize(bmOptions, 300, 300);
         bmOptions.inPurgeable = true;
-
-
         Bitmap bitmap = BitmapFactory.decodeStream(this.contexto.getContentResolver().openInputStream(output),null,bmOptions);
-        //Bitmap bitmap = decodeSampledBitmapFromResource(output, 100, 100);
-
+        //Bitmap bitmap = decodeSampledBitmapFromResource(output, 100, 100)
         view.setImageBitmap(bitmap);
-
         Bitmap.Config config = bitmap.getConfig();
         if(config == null){
             config = Bitmap.Config.ARGB_8888;
         }
-
-
         Bitmap newBitmap = null;
         newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), config);
         Canvas newCanvas = new Canvas(newBitmap);
-
         newCanvas.drawBitmap(bitmap, 0, 0, null);
-
-
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
         String captionString = dateTime;
@@ -155,28 +144,21 @@ public class Fotografias extends ActivityCompat {
         paintText.setTextSize(50);
         paintText.setStyle(Paint.Style.FILL);
         paintText.setShadowLayer(10f, 10f, 10f, Color.BLACK);
-
         Rect rectText = new Rect();
         paintText.getTextBounds(captionString, 0, captionString.length(), rectText);
-
         newCanvas.drawText(captionString,
                 newCanvas.getWidth()-rectText.right,
                 newCanvas.getHeight()-rectText.bottom, paintText);
-
-
         FileOutputStream out = null;
         try {
             //int permissionCheck = ContextCompat.checkSelfPermission(contexto, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-
             out = new FileOutputStream(foto);
             newBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out); // bmp is your Bitmap instance
             view.setImageBitmap(newBitmap);
             // PNG is a lossless format, the compression factor (100) is ignored
-            Toast.makeText(getContexto(),"Fecha Estampada",Toast.LENGTH_LONG).show();
+            //Toast.makeText(getContexto(),"Fecha Estampada",Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(getContexto(),"Fecha NO Estampada",Toast.LENGTH_LONG).show();
-
             e.printStackTrace();
         } finally {
             try {
@@ -187,7 +169,78 @@ public class Fotografias extends ActivityCompat {
                 e.printStackTrace();
             }
         }
+    }
+    public void loadImageFromFile(ImageView contendorImagen, String datoAdicional) throws FileNotFoundException {
+        /*
+        Esta funcion stampa la fotografia con el nro de suministro mas
+         */
+        ImageView view = contendorImagen;
+        view.setVisibility(View.VISIBLE);
+        int targetW = view.getWidth();
+        int targetH = view.getHeight();
 
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(foto, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inSampleSize = calculateInSampleSize(bmOptions, 300, 300);
+        bmOptions.inPurgeable = true;
+        Bitmap bitmap = BitmapFactory.decodeStream(this.contexto.getContentResolver().openInputStream(output),null,bmOptions);
+        //Bitmap bitmap = decodeSampledBitmapFromResource(output, 100, 100)
+        view.setImageBitmap(bitmap);
+        Bitmap.Config config = bitmap.getConfig();
+        if(config == null){
+            config = Bitmap.Config.ARGB_8888;
+        }
+        Bitmap newBitmap = null;
+        newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), config);
+        Canvas newCanvas = new Canvas(newBitmap);
+        newCanvas.drawBitmap(bitmap, 0, 0, null);
+        //SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        String dateTime = sdf.format(Calendar.getInstance().getTime()); // reading local time in the system
+        String captionString = dateTime;
+        if (!datoAdicional.isEmpty()){
+            captionString =  datoAdicional+"_"+dateTime;
+        }
+        Paint paintText = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintText.setColor(Color.BLUE);
+        paintText.setTextSize(30);
+        paintText.setStyle(Paint.Style.FILL);
+        paintText.setShadowLayer(10f, 10f, 10f, Color.BLACK);
+        Rect rectText = new Rect();
+        paintText.getTextBounds(captionString, 0, captionString.length(), rectText);
+        newCanvas.drawText(captionString,
+                newCanvas.getWidth()-rectText.right,
+                newCanvas.getHeight()-rectText.bottom, paintText);
+        FileOutputStream out = null;
+        try {
+            //int permissionCheck = ContextCompat.checkSelfPermission(contexto, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            out = new FileOutputStream(foto);
+            newBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out); // bmp is your Bitmap instance
+            view.setImageBitmap(newBitmap);
+            // PNG is a lossless format, the compression factor (100) is ignored
+            //Toast.makeText(getContexto(),"Fecha Estampada",Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(getContexto(),"Fecha NO Estampada",Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
     public Bitmap decodeSampledBitmapFromResource(Uri output2, int reqWidth, int reqHeight) throws FileNotFoundException {
 

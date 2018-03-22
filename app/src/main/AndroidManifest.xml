@@ -32,7 +32,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".LoginClase"
-            android:label="Login"
+            android:label="Scdsoft"
             android:theme="@style/AppTheme.NoActionBar">
 
             <!-- Esto hace que inicie este activity primero -->
@@ -75,6 +75,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MenuLateralActivity" />
         </activity>
+        <activity android:name=".VisitaCampoMarcador"></activity>
     </application>
 
 </manifest>

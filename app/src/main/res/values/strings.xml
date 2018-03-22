@@ -28,6 +28,10 @@
         <item>40. Vecino(a)</item>
         <item>99. No informado</item>
     </string-array>
+    <string-array name="saModoInicio">
+        <item>Modo Clasico</item>
+        <item>Modo Volanteo</item>
+    </string-array>
     <string name="title_activity_menu_lateral">MenuLateralActivity</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>

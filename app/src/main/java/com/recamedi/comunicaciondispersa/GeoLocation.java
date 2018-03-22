@@ -110,10 +110,17 @@ public class GeoLocation implements LocationListener {
         Criteria c = new Criteria();
         c.setAccuracy(Criteria.ACCURACY_FINE);
         provide = handle.getBestProvider(c, true);
-        if (ActivityCompat.checkSelfPermission(act, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(act, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (checkLocation()){
+            if (ActivityCompat.checkSelfPermission(act, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(act, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                paraServicio();
+                return;
+            }
+            handle.requestLocationUpdates(provide, 5000, 1, this);
+
+        }else {
 
         }
-        handle.requestLocationUpdates(provide, 10000, 1, this);
     }
 
     public void muestraPosicionActual() {
@@ -125,6 +132,7 @@ public class GeoLocation implements LocationListener {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+
             return;
         }
         Location location = handle.getLastKnownLocation(provide);
@@ -136,9 +144,10 @@ public class GeoLocation implements LocationListener {
             Longitud=location.getLongitude();
         }
         obtenerDireccion(location);
-        Toast.makeText(act.getApplicationContext(), "Latitud: "+Latitud+" Longitud: "+Longitud, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(act.getApplicationContext(), "Latitud: "+Latitud+" Longitud: "+Longitud, Toast.LENGTH_SHORT).show();
 
     }
+
     public void obtenerDireccion(Location loc){
         if (loc!=null){
             if (loc.getLatitude()!=0.0 && loc.getLongitude()!=0.0){
@@ -164,6 +173,7 @@ public class GeoLocation implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
         muestraPosicionActual();
+        //Toast.makeText(contexto,"Se cambio de ruta",Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -178,7 +188,29 @@ public class GeoLocation implements LocationListener {
 
     @Override
     public void onProviderDisabled(String s) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(contexto);
 
+        builder.setTitle("GPS Desactivado")
+                .setMessage("El GPS debe estar activado siempre.¿Activarlo ahora?")
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onPossitiveButtonClick();
+                                Intent i=new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                act.startActivity(i);
+                            }
+                        })
+                .setNegativeButton("CANCELAR",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //listener.onNegativeButtonClick();
+                                act.finish();
+                            }
+                        });
+        builder.show();
     }
 
 
@@ -190,9 +222,36 @@ public class GeoLocation implements LocationListener {
     }
 
     public boolean checkLocation() {
-        if (!VerificarGPSActivo()){
+        if (VerificarGPSActivo()){
             return VerificarGPSActivo();
         }else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(contexto);
+
+            builder.setTitle("GPS Desactivado")
+                    .setMessage("El GPS debe estar activado siempre.¿Activarlo ahora?")
+                    .setPositiveButton("OK",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //listener.onPossitiveButtonClick();
+                                    Intent i=new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    //act.startActivity(i);
+                                    //startActivityForResult(gpsIntent, gpsReqCode);
+                                    act.startActivityForResult(i,200);
+
+                                }
+                            })
+                    .setNegativeButton("CANCELAR",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //listener.onNegativeButtonClick();
+
+                                    ((Activity)contexto).finish();
+                                }
+                            });
+            builder.show();
             return false;
         }
         //showAlert();
